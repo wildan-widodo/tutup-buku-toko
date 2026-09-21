@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Tutup Buku</title>
-    <meta name="app-version" content="2.0.0">
+    <meta name="app-version" content="2.2.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -21,38 +21,55 @@
         input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
         .highlight-box { background: #e8f5e9; border: 2px dashed #2e7d32; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
         .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
-        .btn-cancel { background: #9e9e9e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; }
+        .btn-success { background: #1565c0; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; }
+        .btn-cancel { background: #9e9e9e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; }
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.9rem; }
         th { background: #f8f9fa; }
-        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 380px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align: center; }
+        .vertical-details { font-size: 0.8rem; line-height: 1.4; white-space: normal; min-width: 180px; }
+        .login-card { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        .app-content { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="card" style="text-align: center; background: #2e7d32; color: white;">
-        <h2 style="margin: 0; color: white;">🏪 Aplikasi Pendamping Tutup Buku Toko AWW</h2>
-        <p style="font-size: 0.9rem; margin: 5px 0 0 0;">Catat laporan tutup buku harian dan keamanan fisik permen</p>
+<!-- HALAMAN LOGIN PIN PER TOKO -->
+<div class="login-card" id="loginCard">
+    <h2>Login Toko AWW</h2>
+    <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Pilih titik toko dan masukkan PIN Anda</p>
+    <div class="form-group">
+        <label>Pilih Titik Toko</label>
+        <select id="loginStoreSelect">
+            <option value="AWW Sambi">AWW Sambi</option>
+            <option value="AWW Beji">AWW Beji</option>
+            <option value="AWW Bandung">AWW Bandung</option>
+            <option value="AWW Trenggalek">AWW Trenggalek</option>
+            <option value="AWW Ponorogo">AWW Ponorogo</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>PIN Toko / Akses</label>
+        <input type="password" id="loginPinInput" placeholder="••••" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.2rem;">
+    </div>
+    <button type="button" class="btn-primary" onclick="handleStoreLogin()">Masuk ke Sistem Toko</button>
+    <div id="loginError" style="color: #c62828; font-size: 0.85rem; margin-top: 15px;"></div>
+</div>
+
+<!-- APLIKASI UTAMA TUTUP BUKU -->
+<div class="container app-content" id="appContainer">
+    <div class="card" style="display: flex; justify-content: space-between; align-items: center; background: #2e7d32; color: white; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h2 id="storeTitleHeader" style="margin: 0; color: white;">🏪 Toko AWW</h2>
+            <p style="font-size: 0.85rem; margin: 5px 0 0 0;">Aplikasi Pendamping Tutup Buku Harian</p>
+        </div>
+        <button class="btn-cancel" onclick="handleStoreLogout()" style="width: auto; padding: 6px 12px; background: #c62828;">🚪 Keluar / Ganti Toko</button>
     </div>
 
     <!-- FORM TUTUP BUKU HARIAN -->
     <div class="card">
-        <h3>📝 Form Tutup Buku Harian Toko</h3>
+        <h3>📝 Form Tutup Buku Harian</h3>
         <form onsubmit="saveStoreClosing(event)">
-            <div class="form-group">
-                <label>Pilih Titik Toko:</label>
-                <select id="storePointSelect" required>
-                    <option value="AWW Sambi">AWW Sambi</option>
-                    <option value="AWW Beji">AWW Beji</option>
-                    <option value="AWW Bandung">AWW Bandung</option>
-                    <option value="AWW Trenggalek">AWW Trenggalek</option>
-                    <option value="AWW Ponorogo">AWW Ponorogo</option>
-                </select>
-            </div>
-
             <div class="form-group">
                 <label>Pendapatan Kartu Debit (Rp)</label>
                 <input type="text" id="debitInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
@@ -74,11 +91,10 @@
             </div>
 
             <div class="form-group">
-                <label>Rincian Pengeluaran Toko (Opsional)</label>
-                <input type="text" id="expenseDescInput" placeholder="Contoh: Infak (50.000) | Parkir (10.000)">
+                <label>Rincian Pengeluaran Toko (Pisahkan dengan koma atau tanda |)</label>
+                <input type="text" id="expenseDescInput" placeholder="Contoh: Infak (50.000), Parkir (10.000)">
             </div>
 
-            <!-- FITUR TAMBAHAN: KEAMANAN & PENGAMBILAN PERMEN FISIK -->
             <div class="highlight-box">
                 <div class="form-group" style="margin-bottom: 10px;">
                     <label style="color: #1b5e20;">🔒 STATUS PENGAMBILAN PERMEN FISIK:</label>
@@ -90,7 +106,7 @@
                 
                 <div id="collectorSection" style="display: none;">
                     <div class="form-group">
-                        <label style="color: #1b5e20;">👤 Nama Pengambil (Keamanan/Pusat):</label>
+                        <label style="color: #1b5e20;">👤 Nama Pengambil:</label>
                         <input type="text" id="collectorNameInput" placeholder="Contoh: Budi (Bagian Ambil)">
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
@@ -104,16 +120,23 @@
         </form>
     </div>
 
+    <!-- FITUR AMBIL MASAL OTOMATIS TANGGAL SEBELUMNYA -->
+    <div class="card">
+        <h3>⚡ Ambil Masal Permen Fisik Belum Diambil</h3>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 12px;">Jika hari ini pusat mengambil semua permen yang tertinggal di toko (misal tarikan rutin mingguan), klik tombol di bawah ini agar semua laporan sebelumnya yang belum diambil otomatis berstatus <b>Sudah Diambil</b>.</p>
+        <button type="button" class="btn-success" onclick="openBulkCollectModal()">📦 Ambil Semua Permen Tertinggal di Toko Ini</button>
+    </div>
+
     <!-- RIWAYAT LOKAL -->
     <div class="card">
-        <h3>📋 Riwayat Laporan Terkirim</h3>
+        <h3>📋 Riwayat Laporan Toko Ini</h3>
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
-                        <th>Tanggal</th>
-                        <th>Toko</th>
+                        <th>Tanggal & Waktu</th>
                         <th>Total Omset</th>
+                        <th>Pengeluaran Toko</th>
                         <th>Status Ambil Permen</th>
                     </tr>
                 </thead>
@@ -121,6 +144,20 @@
                     <tr><td colspan="4" style="text-align: center; color: #777;">Memuat data...</td></tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL AMBIL MASAL -->
+<div class="modal" id="bulkModal" style="display:none; position:fixed; z-index:10; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div class="modal-content" style="background:white; padding:20px; border-radius:8px; width:350px; text-align:center;">
+        <h3>Konfirmasi Ambil Masal</h3>
+        <p style="font-size:0.85rem; color:#666;">Semua sisa permen yang belum diambil di toko ini akan ditandai sudah diambil.</p>
+        <div class="form-group"><label>Nama Pengambil / Petugas</label><input type="text" id="bulkCollectorName" placeholder="Contoh: Budi"></div>
+        <div class="form-group"><label>Tanggal Penarikan</label><input type="date" id="bulkCollectionDate"></div>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn-cancel" onclick="document.getElementById('bulkModal').style.display='none'">Batal</button>
+            <button class="btn-primary" onclick="confirmBulkCollection()" style="background:#1565c0;">Proses Ambil</button>
         </div>
     </div>
 </div>
@@ -141,14 +178,49 @@
     const db = firebase.database();
 
     let allClosings = [];
+    let currentStore = null;
+    
+    // PIN Toko (Bisa disesuaikan atau diganti kapan saja)
+    const storePins = {
+        'AWW Sambi': '1111',
+        'AWW Beji': '2222',
+        'AWW Bandung': '3333',
+        'AWW Trenggalek': '4444',
+        'AWW Ponorogo': '5555',
+        'Master9999': '9999' // Master PIN jika pusat ingin akses
+    };
 
-    window.onload = function() {
-        document.getElementById('collectionDateInput').value = new Date().toISOString().split('T')[0];
+    function handleStoreLogin() {
+        let store = document.getElementById('loginStoreSelect').value;
+        let pin = document.getElementById('loginPinInput').value.trim();
+
+        if (pin === storePins[store] || pin === storePins['Master9999']) {
+            currentStore = store;
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            document.getElementById('storeTitleHeader').innerText = `🏪 ${store}`;
+            document.getElementById('collectionDateInput').value = new Date().toISOString().split('T')[0];
+            loadData();
+        } else {
+            document.getElementById('loginError').innerText = 'PIN Toko Salah!';
+            document.getElementById('loginPinInput').value = '';
+        }
+    }
+
+    function handleStoreLogout() {
+        currentStore = null;
+        document.getElementById('loginCard').style.display = 'block';
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('loginPinInput').value = '';
+        document.getElementById('loginError').innerText = '';
+    }
+
+    function loadData() {
         db.ref('store_closings').on('value', snapshot => {
             allClosings = snapshot.val() || [];
             renderHistory();
         });
-    };
+    }
 
     function formatNumber(num) { return isNaN(num) ? '' : new Intl.NumberFormat('id-ID').format(num); }
     function parseCleanNumber(str) { return !str ? 0 : parseFloat(str.toString().replace(/\./g, '').replace(/,/g, '')) || 0; }
@@ -162,7 +234,6 @@
 
     function saveStoreClosing(e) {
         e.preventDefault();
-        let storePoint = document.getElementById('storePointSelect').value;
         let debit = parseCleanNumber(document.getElementById('debitInput').value);
         let qris = parseCleanNumber(document.getElementById('qrisInput').value);
         let physicalCash = parseCleanNumber(document.getElementById('physicalCashInput').value);
@@ -189,7 +260,7 @@
 
         let newRecord = {
             id: Date.now(),
-            storePoint,
+            storePoint: currentStore,
             debit,
             qris,
             physicalCash,
@@ -205,7 +276,7 @@
 
         allClosings.push(newRecord);
         db.ref('store_closings').set(allClosings).then(() => {
-            alert('Laporan tutup buku berhasil dikirim dan disinkronkan ke pusat!');
+            alert('Laporan tutup buku berhasil disimpan!');
             document.getElementById('debitInput').value = '';
             document.getElementById('qrisInput').value = '';
             document.getElementById('physicalCashInput').value = '';
@@ -216,23 +287,68 @@
         });
     }
 
+    function openBulkCollectModal() {
+        document.getElementById('bulkCollectorName').value = '';
+        document.getElementById('bulkCollectionDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('bulkModal').style.display = 'flex';
+    }
+
+    function confirmBulkCollection() {
+        let name = document.getElementById('bulkCollectorName').value.trim();
+        let rawDate = document.getElementById('bulkCollectionDate').value;
+        if (!name || !rawDate) { alert('Nama pengambil dan tanggal wajib diisi!'); return; }
+
+        let p = rawDate.split('-');
+        let formattedDate = `${p[2]}/${p[1]}/${p[0]} ${new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
+
+        let updated = false;
+        allClosings = allClosings.map(item => {
+            if (item.storePoint === currentStore && !item.isCollected) {
+                updated = true;
+                return { ...item, isCollected: true, collectorName: name, collectionDate: formattedDate };
+            }
+            return item;
+        });
+
+        if (updated) {
+            db.ref('store_closings').set(allClosings).then(() => {
+                alert('Semua permen tertinggal di toko ini berhasil ditandai sudah diambil!');
+                document.getElementById('bulkModal').style.display = 'none';
+            });
+        } else {
+            alert('Tidak ada permen tertinggal (semua sudah berstatus diambil).');
+            document.getElementById('bulkModal').style.display = 'none';
+        }
+    }
+
     function renderHistory() {
         let tbody = document.getElementById('historyTableBody');
         tbody.innerHTML = '';
-        if (allClosings.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Belum ada riwayat laporan.</td></tr>`;
+        
+        let storeLogs = allClosings.filter(i => i.storePoint === currentStore);
+        if (storeLogs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Belum ada riwayat laporan untuk toko ini.</td></tr>`;
             return;
         }
 
-        allClosings.slice().reverse().forEach(i => {
+        storeLogs.slice().reverse().forEach(i => {
             let status = i.isCollected ? 
                 `<span style="color: #2e7d32; font-size: 0.85rem;"><b>Diambil</b><br>Oleh: ${i.collectorName}<br>(${i.collectionDate})</span>` : 
                 `<span style="color: #c62828; font-size: 0.85rem;">Belum Diambil</span>`;
 
+            let expenseFormatted = '-';
+            if (i.expenseDesc && i.expenseDesc !== '-') {
+                let rawText = i.expenseDesc;
+                let expenses = rawText.includes('|') ? rawText.split('|').map(e => e.trim()) : rawText.split(',').map(e => e.trim());
+                expenseFormatted = `<div class="vertical-details">`;
+                expenses.forEach(exp => { if (exp) expenseFormatted += `<div>• ${exp}</div>`; });
+                expenseFormatted += `</div>`;
+            }
+
             tbody.innerHTML += `<tr>
                 <td>${i.date} ${i.time || ''}</td>
-                <td><b>${i.storePoint}</b></td>
                 <td style="color: #0d47a1; font-weight: bold;">${formatRp(i.computerOmset || ((i.debit||0)+(i.qris||0)+(i.physicalCash||0)))}</td>
+                <td>${expenseFormatted}</td>
                 <td>${status}</td>
             </tr>`;
         });
