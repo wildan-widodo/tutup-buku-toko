@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Tutup Buku</title>
-    <meta name="app-version" content="2.3.0">
+    <meta name="app-version" content="2.4.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -40,7 +40,7 @@
     <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Masukkan PIN Akses Toko Anda</p>
     <div class="form-group">
         <label>PIN Toko</label>
-        <input type="password" id="loginPinInput" placeholder="••••" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.3rem;" onkeydown="if(event.key==='Enter'){ handleStoreLogin(); }">
+        <input type="password" id="loginPinInput" placeholder="••••" maxlength="5" style="text-align: center; letter-spacing: 5px; font-size: 1.3rem;" onkeydown="if(event.key==='Enter'){ handleStoreLogin(); }">
     </div>
     <button type="button" class="btn-primary" onclick="handleStoreLogin()">Masuk</button>
     <div id="loginError" style="color: #c62828; font-size: 0.85rem; margin-top: 15px;"></div>
@@ -170,13 +170,13 @@
     let allClosings = [];
     let currentStore = null;
     
-    // Pemetaan PIN Toko sesuai versi Netlify
+    // Pemetaan PIN Toko baru
     const pinToStoreMap = {
-        '1111': 'AWW Sambi',
-        '2222': 'AWW Beji',
-        '3333': 'AWW Bandung',
-        '4444': 'AWW Trenggalek',
-        '5555': 'AWW Ponorogo',
+        '64176': 'AWW Sambi',
+        '66233': 'AWW Beji',
+        '66274': 'AWW Bandung',
+        '66313': 'AWW Trenggalek',
+        '63416': 'AWW Ponorogo',
         '9999': 'Master Pusat'
     };
 
