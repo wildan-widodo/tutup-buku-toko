@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Tutup Buku</title>
-    <meta name="app-version" content="2.2.0">
+    <meta name="app-version" content="2.3.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -28,31 +28,21 @@
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.9rem; }
         th { background: #f8f9fa; }
         .vertical-details { font-size: 0.8rem; line-height: 1.4; white-space: normal; min-width: 180px; }
-        .login-card { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        .login-card { max-width: 380px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
         .app-content { display: none; }
     </style>
 </head>
 <body>
 
-<!-- HALAMAN LOGIN PIN PER TOKO -->
+<!-- HALAMAN LOGIN PIN OTOMATIS -->
 <div class="login-card" id="loginCard">
     <h2>Login Toko AWW</h2>
-    <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Pilih titik toko dan masukkan PIN Anda</p>
+    <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Masukkan PIN Akses Toko Anda</p>
     <div class="form-group">
-        <label>Pilih Titik Toko</label>
-        <select id="loginStoreSelect">
-            <option value="AWW Sambi">AWW Sambi</option>
-            <option value="AWW Beji">AWW Beji</option>
-            <option value="AWW Bandung">AWW Bandung</option>
-            <option value="AWW Trenggalek">AWW Trenggalek</option>
-            <option value="AWW Ponorogo">AWW Ponorogo</option>
-        </select>
+        <label>PIN Toko</label>
+        <input type="password" id="loginPinInput" placeholder="••••" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.3rem;" onkeydown="if(event.key==='Enter'){ handleStoreLogin(); }">
     </div>
-    <div class="form-group">
-        <label>PIN Toko / Akses</label>
-        <input type="password" id="loginPinInput" placeholder="••••" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.2rem;">
-    </div>
-    <button type="button" class="btn-primary" onclick="handleStoreLogin()">Masuk ke Sistem Toko</button>
+    <button type="button" class="btn-primary" onclick="handleStoreLogin()">Masuk</button>
     <div id="loginError" style="color: #c62828; font-size: 0.85rem; margin-top: 15px;"></div>
 </div>
 
@@ -180,25 +170,24 @@
     let allClosings = [];
     let currentStore = null;
     
-    // PIN Toko (Bisa disesuaikan atau diganti kapan saja)
-    const storePins = {
-        'AWW Sambi': '1111',
-        'AWW Beji': '2222',
-        'AWW Bandung': '3333',
-        'AWW Trenggalek': '4444',
-        'AWW Ponorogo': '5555',
-        'Master9999': '9999' // Master PIN jika pusat ingin akses
+    // Pemetaan PIN Toko sesuai versi Netlify
+    const pinToStoreMap = {
+        '1111': 'AWW Sambi',
+        '2222': 'AWW Beji',
+        '3333': 'AWW Bandung',
+        '4444': 'AWW Trenggalek',
+        '5555': 'AWW Ponorogo',
+        '9999': 'Master Pusat'
     };
 
     function handleStoreLogin() {
-        let store = document.getElementById('loginStoreSelect').value;
         let pin = document.getElementById('loginPinInput').value.trim();
 
-        if (pin === storePins[store] || pin === storePins['Master9999']) {
-            currentStore = store;
+        if (pinToStoreMap.hasOwnProperty(pin)) {
+            currentStore = pinToStoreMap[pin];
             document.getElementById('loginCard').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
-            document.getElementById('storeTitleHeader').innerText = `🏪 ${store}`;
+            document.getElementById('storeTitleHeader').innerText = `🏪 ${currentStore}`;
             document.getElementById('collectionDateInput').value = new Date().toISOString().split('T')[0];
             loadData();
         } else {
