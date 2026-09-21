@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Pendamping Toko AWW - Tutup Buku</title>
+    <meta name="app-version" content="2.0.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #f4f6f8; margin: 0; padding: 15px; }
+        .container { max-width: 900px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2, h3 { margin-top: 0; color: #333; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 5px; color: #666; font-weight: bold; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        .highlight-box { background: #e8f5e9; border: 2px dashed #2e7d32; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
+        .btn-cancel { background: #9e9e9e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.9rem; }
+        th { background: #f8f9fa; }
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 380px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card" style="text-align: center; background: #2e7d32; color: white;">
+        <h2 style="margin: 0; color: white;">🏪 Aplikasi Pendamping Tutup Buku Toko AWW</h2>
+        <p style="font-size: 0.9rem; margin: 5px 0 0 0;">Catat laporan tutup buku harian dan keamanan fisik permen</p>
+    </div>
+
+    <!-- FORM TUTUP BUKU HARIAN -->
+    <div class="card">
+        <h3>📝 Form Tutup Buku Harian Toko</h3>
+        <form onsubmit="saveStoreClosing(event)">
+            <div class="form-group">
+                <label>Pilih Titik Toko:</label>
+                <select id="storePointSelect" required>
+                    <option value="AWW Sambi">AWW Sambi</option>
+                    <option value="AWW Beji">AWW Beji</option>
+                    <option value="AWW Bandung">AWW Bandung</option>
+                    <option value="AWW Trenggalek">AWW Trenggalek</option>
+                    <option value="AWW Ponorogo">AWW Ponorogo</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Pendapatan Kartu Debit (Rp)</label>
+                <input type="text" id="debitInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
+            </div>
+
+            <div class="form-group">
+                <label>Pendapatan QRIS (Rp)</label>
+                <input type="text" id="qrisInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
+            </div>
+
+            <div class="form-group">
+                <label>Permen Fisik / Tunai Kasir (Rp)</label>
+                <input type="text" id="physicalCashInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
+            </div>
+
+            <div class="form-group">
+                <label>Pendapatan Parkir (Rp)</label>
+                <input type="text" id="parkingInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
+            </div>
+
+            <div class="form-group">
+                <label>Rincian Pengeluaran Toko (Opsional)</label>
+                <input type="text" id="expenseDescInput" placeholder="Contoh: Infak (50.000) | Parkir (10.000)">
+            </div>
+
+            <!-- FITUR TAMBAHAN: KEAMANAN & PENGAMBILAN PERMEN FISIK -->
+            <div class="highlight-box">
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="color: #1b5e20;">🔒 STATUS PENGAMBILAN PERMEN FISIK:</label>
+                    <select id="isCollectedSelect" onchange="toggleCollectorSection()" required>
+                        <option value="false">🔴 Belum Diambil (Masih di Toko)</option>
+                        <option value="true">🟢 Langsung Diambil Saat Tutup Buku</option>
+                    </select>
+                </div>
+                
+                <div id="collectorSection" style="display: none;">
+                    <div class="form-group">
+                        <label style="color: #1b5e20;">👤 Nama Pengambil (Keamanan/Pusat):</label>
+                        <input type="text" id="collectorNameInput" placeholder="Contoh: Budi (Bagian Ambil)">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="color: #1b5e20;">📅 Tanggal Pengambilan:</label>
+                        <input type="date" id="collectionDateInput">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary">Kirim Laporan Tutup Buku</button>
+        </form>
+    </div>
+
+    <!-- RIWAYAT LOKAL -->
+    <div class="card">
+        <h3>📋 Riwayat Laporan Terkirim</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Toko</th>
+                        <th>Total Omset</th>
+                        <th>Status Ambil Permen</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <tr><td colspan="4" style="text-align: center; color: #777;">Memuat data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCVJcVrRg4w9xY__bvf_4Lfk0ENQ5X5F8E",
+        authDomain: "pencatatan-keuangan-brankas.firebaseapp.com",
+        databaseURL: "https://pencatatan-keuangan-brankas-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "pencatatan-keuangan-brankas",
+        storageBucket: "pencatatan-keuangan-brankas.firebasestorage.app",
+        messagingSenderId: "720417739854",
+        appId: "1:720417739854:web:2068a770e38890783d1f1f",
+        measurementId: "G-X3Z7GVB39Z"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let allClosings = [];
+
+    window.onload = function() {
+        document.getElementById('collectionDateInput').value = new Date().toISOString().split('T')[0];
+        db.ref('store_closings').on('value', snapshot => {
+            allClosings = snapshot.val() || [];
+            renderHistory();
+        });
+    };
+
+    function formatNumber(num) { return isNaN(num) ? '' : new Intl.NumberFormat('id-ID').format(num); }
+    function parseCleanNumber(str) { return !str ? 0 : parseFloat(str.toString().replace(/\./g, '').replace(/,/g, '')) || 0; }
+    function formatRp(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num); }
+    function formatInputNumber(el) { el.value = parseCleanNumber(el.value) > 0 ? formatNumber(parseCleanNumber(el.value)) : ''; }
+
+    function toggleCollectorSection() {
+        let val = document.getElementById('isCollectedSelect').value;
+        document.getElementById('collectorSection').style.display = val === 'true' ? 'block' : 'none';
+    }
+
+    function saveStoreClosing(e) {
+        e.preventDefault();
+        let storePoint = document.getElementById('storePointSelect').value;
+        let debit = parseCleanNumber(document.getElementById('debitInput').value);
+        let qris = parseCleanNumber(document.getElementById('qrisInput').value);
+        let physicalCash = parseCleanNumber(document.getElementById('physicalCashInput').value);
+        let parking = parseCleanNumber(document.getElementById('parkingInput').value);
+        let expenseDesc = document.getElementById('expenseDescInput').value.trim() || '-';
+        
+        let isCollected = document.getElementById('isCollectedSelect').value === 'true';
+        let collectorName = isCollected ? document.getElementById('collectorNameInput').value.trim() : '';
+        let rawDate = isCollected ? document.getElementById('collectionDateInput').value : '';
+        
+        let collectionDateFormatted = '-';
+        if (isCollected && rawDate) {
+            let p = rawDate.split('-');
+            collectionDateFormatted = `${p[2]}/${p[1]}/${p[0]} ${new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
+        }
+
+        if (isCollected && !collectorName) {
+            alert('Nama pengambil wajib diisi jika permen langsung diambil!');
+            return;
+        }
+
+        let computerOmset = debit + qris + physicalCash;
+        let now = new Date();
+
+        let newRecord = {
+            id: Date.now(),
+            storePoint,
+            debit,
+            qris,
+            physicalCash,
+            parking,
+            computerOmset,
+            expenseDesc,
+            isCollected,
+            collectorName: collectorName || 'Pusat',
+            collectionDate: collectionDateFormatted,
+            date: now.toLocaleDateString('id-ID'),
+            time: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+        };
+
+        allClosings.push(newRecord);
+        db.ref('store_closings').set(allClosings).then(() => {
+            alert('Laporan tutup buku berhasil dikirim dan disinkronkan ke pusat!');
+            document.getElementById('debitInput').value = '';
+            document.getElementById('qrisInput').value = '';
+            document.getElementById('physicalCashInput').value = '';
+            document.getElementById('parkingInput').value = '';
+            document.getElementById('expenseDescInput').value = '';
+            document.getElementById('isCollectedSelect').value = 'false';
+            toggleCollectorSection();
+        });
+    }
+
+    function renderHistory() {
+        let tbody = document.getElementById('historyTableBody');
+        tbody.innerHTML = '';
+        if (allClosings.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Belum ada riwayat laporan.</td></tr>`;
+            return;
+        }
+
+        allClosings.slice().reverse().forEach(i => {
+            let status = i.isCollected ? 
+                `<span style="color: #2e7d32; font-size: 0.85rem;"><b>Diambil</b><br>Oleh: ${i.collectorName}<br>(${i.collectionDate})</span>` : 
+                `<span style="color: #c62828; font-size: 0.85rem;">Belum Diambil</span>`;
+
+            tbody.innerHTML += `<tr>
+                <td>${i.date} ${i.time || ''}</td>
+                <td><b>${i.storePoint}</b></td>
+                <td style="color: #0d47a1; font-weight: bold;">${formatRp(i.computerOmset || ((i.debit||0)+(i.qris||0)+(i.physicalCash||0)))}</td>
+                <td>${status}</td>
+            </tr>`;
+        });
+    }
+</script>
+</body>
+</html>
