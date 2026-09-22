@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Tutup Buku</title>
-    <meta name="app-version" content="2.5.0">
+    <meta name="app-version" content="2.6.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -69,6 +69,12 @@
         <h3>📝 Form Tutup Buku Harian</h3>
         <form onsubmit="saveStoreClosing(event)">
             <div class="form-group">
+                <label>Tanggal Laporan (Opsional)</label>
+                <input type="date" id="closingDateInput">
+                <small style="color: #666; font-size: 0.75rem;">Biarkan kosong jika ingin menggunakan tanggal hari ini secara otomatis.</small>
+            </div>
+
+            <div class="form-group">
                 <label>Pendapatan Kartu Debit (Rp)</label>
                 <input type="text" id="debitInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
             </div>
@@ -92,7 +98,6 @@
             <div class="form-group">
                 <label>Rincian Pengeluaran Toko</label>
                 <div id="expenseRowsContainer">
-                    <!-- Baris Pertama Default -->
                     <div class="expense-row">
                         <input type="text" class="exp-name" placeholder="Nama Keperluan (Contoh: Infak / Parkir)">
                         <input type="text" class="exp-cost" inputmode="numeric" placeholder="Nominal (Rp)" oninput="formatInputNumber(this)">
@@ -134,7 +139,7 @@
         <button type="button" class="btn-success" onclick="openBulkCollectModal()">📦 Ambil Semua Permen Tertinggal di Toko Ini</button>
     </div>
 
-    <!-- RIWAYAT LAPORAN (DENGAN PENJABARAN OMSET) -->
+    <!-- RIWAYAT LAPORAN -->
     <div class="card">
         <h3>📋 Riwayat Laporan Toko Ini</h3>
         <div class="table-responsive">
@@ -190,7 +195,6 @@
     let allClosings = [];
     let currentStore = null;
     
-    // Pemetaan 5 PIN Toko Saja (Master Pusat Dihapus)
     const pinToStoreMap = {
         '64176': 'AWW Sambi',
         '66233': 'AWW Beji',
@@ -207,7 +211,12 @@
             document.getElementById('loginCard').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
             document.getElementById('storeTitleHeader').innerText = `🏪 ${currentStore}`;
-            document.getElementById('collectionDateInput').value = new Date().toISOString().split('T')[0];
+            
+            // Set default tanggal hari ini
+            let todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('collectionDateInput').value = todayStr;
+            document.getElementById('closingDateInput').value = todayStr;
+            
             loadData();
         } else {
             document.getElementById('loginError').innerText = 'PIN Toko Salah!';
@@ -273,7 +282,6 @@
         let physicalCash = parseCleanNumber(document.getElementById('physicalCashInput').value);
         let parking = parseCleanNumber(document.getElementById('parkingInput').value);
         
-        // Kumpulkan rincian pengeluaran dinamis
         let expenseParts = [];
         document.querySelectorAll('.expense-row').forEach(row => {
             let name = row.querySelector('.exp-name').value.trim();
@@ -299,8 +307,19 @@
             return;
         }
 
-        let computerOmset = debit + qris + physicalCash;
+        // Ambil tanggal laporan (jika kosong, gunakan tanggal hari ini)
+        let customDateVal = document.getElementById('closingDateInput').value;
+        let finalDateStr = '';
         let now = new Date();
+        
+        if (customDateVal) {
+            let p = customDateVal.split('-');
+            finalDateStr = `${p[2]}/${p[1]}/${p[0]}`;
+        } else {
+            finalDateStr = now.toLocaleDateString('id-ID');
+        }
+
+        let computerOmset = debit + qris + physicalCash;
 
         let newRecord = {
             id: Date.now(),
@@ -314,7 +333,7 @@
             isCollected,
             collectorName: collectorName || 'Pusat',
             collectionDate: collectionDateFormatted,
-            date: now.toLocaleDateString('id-ID'),
+            date: finalDateStr,
             time: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
         };
 
@@ -325,8 +344,8 @@
             document.getElementById('qrisInput').value = '';
             document.getElementById('physicalCashInput').value = '';
             document.getElementById('parkingInput').value = '';
+            document.getElementById('closingDateInput').value = new Date().toISOString().split('T')[0];
             
-            // Reset baris pengeluaran ke 1 baris kosong
             document.getElementById('expenseRowsContainer').innerHTML = `
                 <div class="expense-row">
                     <input type="text" class="exp-name" placeholder="Nama Keperluan (Contoh: Infak / Parkir)">
