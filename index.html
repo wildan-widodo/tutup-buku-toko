@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Tutup Buku</title>
-    <meta name="app-version" content="2.4.0">
+    <meta name="app-version" content="2.5.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -13,28 +13,36 @@
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; }
         body { background: #f4f6f8; margin: 0; padding: 15px; }
-        .container { max-width: 900px; margin: auto; }
+        .container { max-width: 1000px; margin: auto; }
         .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         h2, h3 { margin-top: 0; color: #333; }
         .form-group { margin-bottom: 15px; text-align: left; }
         label { display: block; margin-bottom: 5px; color: #666; font-weight: bold; font-size: 0.9rem; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        
+        .expense-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
+        .expense-row input { flex: 2; }
+        .expense-row input.nominal { flex: 1; }
+        .btn-add-row { background: #00796b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; }
+        .btn-del-row { background: #c62828; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
+
         .highlight-box { background: #e8f5e9; border: 2px dashed #2e7d32; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
         .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
         .btn-success { background: #1565c0; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; }
         .btn-cancel { background: #9e9e9e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; }
+        
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.9rem; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.85rem; white-space: nowrap; }
         th { background: #f8f9fa; }
-        .vertical-details { font-size: 0.8rem; line-height: 1.4; white-space: normal; min-width: 180px; }
+        .vertical-details { font-size: 0.8rem; line-height: 1.4; white-space: normal; min-width: 160px; }
         .login-card { max-width: 380px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
         .app-content { display: none; }
     </style>
 </head>
 <body>
 
-<!-- HALAMAN LOGIN PIN OTOMATIS -->
+<!-- HALAMAN LOGIN PIN 5 TOKO -->
 <div class="login-card" id="loginCard">
     <h2>Login Toko AWW</h2>
     <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Masukkan PIN Akses Toko Anda</p>
@@ -80,9 +88,18 @@
                 <input type="text" id="parkingInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
             </div>
 
+            <!-- BAGIAN RINCIAN PENGELUARAN DINAMIS (MULTI-BARIS) -->
             <div class="form-group">
-                <label>Rincian Pengeluaran Toko (Pisahkan dengan koma atau tanda |)</label>
-                <input type="text" id="expenseDescInput" placeholder="Contoh: Infak (50.000), Parkir (10.000)">
+                <label>Rincian Pengeluaran Toko</label>
+                <div id="expenseRowsContainer">
+                    <!-- Baris Pertama Default -->
+                    <div class="expense-row">
+                        <input type="text" class="exp-name" placeholder="Nama Keperluan (Contoh: Infak / Parkir)">
+                        <input type="text" class="exp-cost" inputmode="numeric" placeholder="Nominal (Rp)" oninput="formatInputNumber(this)">
+                        <button type="button" class="btn-del-row" onclick="removeExpenseRow(this)" style="display:none;">✕</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-add-row" onclick="addExpenseRow()">+ Tambah Baris Pengeluaran</button>
             </div>
 
             <div class="highlight-box">
@@ -117,7 +134,7 @@
         <button type="button" class="btn-success" onclick="openBulkCollectModal()">📦 Ambil Semua Permen Tertinggal di Toko Ini</button>
     </div>
 
-    <!-- RIWAYAT LOKAL -->
+    <!-- RIWAYAT LAPORAN (DENGAN PENJABARAN OMSET) -->
     <div class="card">
         <h3>📋 Riwayat Laporan Toko Ini</h3>
         <div class="table-responsive">
@@ -125,13 +142,16 @@
                 <thead>
                     <tr>
                         <th>Tanggal & Waktu</th>
-                        <th>Total Omset</th>
+                        <th>Permen Fisik</th>
+                        <th>Parkir</th>
+                        <th>QRIS</th>
+                        <th>Debit</th>
                         <th>Pengeluaran Toko</th>
                         <th>Status Ambil Permen</th>
                     </tr>
                 </thead>
                 <tbody id="historyTableBody">
-                    <tr><td colspan="4" style="text-align: center; color: #777;">Memuat data...</td></tr>
+                    <tr><td colspan="7" style="text-align: center; color: #777;">Memuat data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -170,14 +190,13 @@
     let allClosings = [];
     let currentStore = null;
     
-    // Pemetaan PIN Toko baru
+    // Pemetaan 5 PIN Toko Saja (Master Pusat Dihapus)
     const pinToStoreMap = {
         '64176': 'AWW Sambi',
         '66233': 'AWW Beji',
         '66274': 'AWW Bandung',
         '66313': 'AWW Trenggalek',
-        '63416': 'AWW Ponorogo',
-        '9999': 'Master Pusat'
+        '63416': 'AWW Ponorogo'
     };
 
     function handleStoreLogin() {
@@ -216,6 +235,32 @@
     function formatRp(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num); }
     function formatInputNumber(el) { el.value = parseCleanNumber(el.value) > 0 ? formatNumber(parseCleanNumber(el.value)) : ''; }
 
+    function addExpenseRow() {
+        let container = document.getElementById('expenseRowsContainer');
+        let div = document.createElement('div');
+        div.className = 'expense-row';
+        div.innerHTML = `
+            <input type="text" class="exp-name" placeholder="Nama Keperluan">
+            <input type="text" class="exp-cost" inputmode="numeric" placeholder="Nominal (Rp)" oninput="formatInputNumber(this)">
+            <button type="button" class="btn-del-row" onclick="removeExpenseRow(this)">✕</button>
+        `;
+        container.appendChild(div);
+        updateDeleteButtons();
+    }
+
+    function removeExpenseRow(btn) {
+        btn.parentElement.remove();
+        updateDeleteButtons();
+    }
+
+    function updateDeleteButtons() {
+        let rows = document.querySelectorAll('.expense-row');
+        rows.forEach((r, idx) => {
+            let delBtn = r.querySelector('.btn-del-row');
+            delBtn.style.display = rows.length > 1 ? 'block' : 'none';
+        });
+    }
+
     function toggleCollectorSection() {
         let val = document.getElementById('isCollectedSelect').value;
         document.getElementById('collectorSection').style.display = val === 'true' ? 'block' : 'none';
@@ -227,7 +272,17 @@
         let qris = parseCleanNumber(document.getElementById('qrisInput').value);
         let physicalCash = parseCleanNumber(document.getElementById('physicalCashInput').value);
         let parking = parseCleanNumber(document.getElementById('parkingInput').value);
-        let expenseDesc = document.getElementById('expenseDescInput').value.trim() || '-';
+        
+        // Kumpulkan rincian pengeluaran dinamis
+        let expenseParts = [];
+        document.querySelectorAll('.expense-row').forEach(row => {
+            let name = row.querySelector('.exp-name').value.trim();
+            let cost = parseCleanNumber(row.querySelector('.exp-cost').value);
+            if (name && cost > 0) {
+                expenseParts.push(`${name} (${formatRp(cost)})`);
+            }
+        });
+        let expenseDesc = expenseParts.length > 0 ? expenseParts.join(', ') : '-';
         
         let isCollected = document.getElementById('isCollectedSelect').value === 'true';
         let collectorName = isCollected ? document.getElementById('collectorNameInput').value.trim() : '';
@@ -270,7 +325,15 @@
             document.getElementById('qrisInput').value = '';
             document.getElementById('physicalCashInput').value = '';
             document.getElementById('parkingInput').value = '';
-            document.getElementById('expenseDescInput').value = '';
+            
+            // Reset baris pengeluaran ke 1 baris kosong
+            document.getElementById('expenseRowsContainer').innerHTML = `
+                <div class="expense-row">
+                    <input type="text" class="exp-name" placeholder="Nama Keperluan (Contoh: Infak / Parkir)">
+                    <input type="text" class="exp-cost" inputmode="numeric" placeholder="Nominal (Rp)" oninput="formatInputNumber(this)">
+                    <button type="button" class="btn-del-row" onclick="removeExpenseRow(this)" style="display:none;">✕</button>
+                </div>
+            `;
             document.getElementById('isCollectedSelect').value = 'false';
             toggleCollectorSection();
         });
@@ -316,14 +379,14 @@
         
         let storeLogs = allClosings.filter(i => i.storePoint === currentStore);
         if (storeLogs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Belum ada riwayat laporan untuk toko ini.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777;">Belum ada riwayat laporan untuk toko ini.</td></tr>`;
             return;
         }
 
         storeLogs.slice().reverse().forEach(i => {
             let status = i.isCollected ? 
-                `<span style="color: #2e7d32; font-size: 0.85rem;"><b>Diambil</b><br>Oleh: ${i.collectorName}<br>(${i.collectionDate})</span>` : 
-                `<span style="color: #c62828; font-size: 0.85rem;">Belum Diambil</span>`;
+                `<span style="color: #2e7d32; font-size: 0.8rem;"><b>Diambil</b><br>Oleh: ${i.collectorName}<br>(${i.collectionDate})</span>` : 
+                `<span style="color: #c62828; font-size: 0.8rem;">Belum Diambil</span>`;
 
             let expenseFormatted = '-';
             if (i.expenseDesc && i.expenseDesc !== '-') {
@@ -336,7 +399,10 @@
 
             tbody.innerHTML += `<tr>
                 <td>${i.date} ${i.time || ''}</td>
-                <td style="color: #0d47a1; font-weight: bold;">${formatRp(i.computerOmset || ((i.debit||0)+(i.qris||0)+(i.physicalCash||0)))}</td>
+                <td style="color: #2e7d32; font-weight: bold;">${formatRp(i.physicalCash || 0)}</td>
+                <td style="color: #00796b;">${formatRp(i.parking || 0)}</td>
+                <td style="color: #6a1b9a;">${formatRp(i.qris || 0)}</td>
+                <td style="color: #1565c0;">${formatRp(i.debit || 0)}</td>
                 <td>${expenseFormatted}</td>
                 <td>${status}</td>
             </tr>`;
