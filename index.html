@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Tutup Buku</title>
-    <meta name="app-version" content="2.6.0">
+    <meta name="app-version" content="2.7.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -75,22 +75,22 @@
             </div>
 
             <div class="form-group">
-                <label>Pendapatan Kartu Debit (Rp)</label>
+                <label>Total Kartu Debit (Rp)</label>
                 <input type="text" id="debitInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
             </div>
 
             <div class="form-group">
-                <label>Pendapatan QRIS (Rp)</label>
+                <label>Total QRIS (Rp)</label>
                 <input type="text" id="qrisInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
             </div>
 
             <div class="form-group">
-                <label>Permen Fisik / Tunai Kasir (Rp)</label>
+                <label>Total Permen Fisik / Tunai Kasir (Rp)</label>
                 <input type="text" id="physicalCashInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
             </div>
 
             <div class="form-group">
-                <label>Pendapatan Parkir (Rp)</label>
+                <label>Total Parkir (Rp)</label>
                 <input type="text" id="parkingInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
             </div>
 
@@ -212,7 +212,6 @@
             document.getElementById('appContainer').style.display = 'block';
             document.getElementById('storeTitleHeader').innerText = `🏪 ${currentStore}`;
             
-            // Set default tanggal hari ini
             let todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('collectionDateInput').value = todayStr;
             document.getElementById('closingDateInput').value = todayStr;
@@ -307,7 +306,6 @@
             return;
         }
 
-        // Ambil tanggal laporan (jika kosong, gunakan tanggal hari ini)
         let customDateVal = document.getElementById('closingDateInput').value;
         let finalDateStr = '';
         let now = new Date();
