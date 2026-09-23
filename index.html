@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Tutup Buku</title>
-    <meta name="app-version" content="2.7.0">
+    <meta name="app-version" content="2.7.1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -134,7 +134,7 @@
 
     <!-- FITUR AMBIL MASAL OTOMATIS TANGGAL SEBELUMNYA -->
     <div class="card">
-        <h3>⚡ Ambil Masal Permen Fisik Belum Diambil</h3>
+        <h3>📦 Ambil Masal Permen Fisik Belum Diambil</h3>
         <p style="font-size: 0.85rem; color: #666; margin-bottom: 12px;">Jika hari ini pusat mengambil semua permen yang tertinggal di toko (misal tarikan rutin mingguan), klik tombol di bawah ini agar semua laporan sebelumnya yang belum diambil otomatis berstatus <b>Sudah Diambil</b>.</p>
         <button type="button" class="btn-success" onclick="openBulkCollectModal()">📦 Ambil Semua Permen Tertinggal di Toko Ini</button>
     </div>
@@ -400,7 +400,10 @@
             return;
         }
 
-        storeLogs.slice().reverse().forEach(i => {
+        // Mengurutkan data berdasarkan ID/Waktu terbaru (descending)
+        storeLogs.sort((a, b) => b.id - a.id);
+
+        storeLogs.forEach(i => {
             let status = i.isCollected ? 
                 `<span style="color: #2e7d32; font-size: 0.8rem;"><b>Diambil</b><br>Oleh: ${i.collectorName}<br>(${i.collectionDate})</span>` : 
                 `<span style="color: #c62828; font-size: 0.8rem;">Belum Diambil</span>`;
