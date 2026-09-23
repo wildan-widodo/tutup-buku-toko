@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Pusat & Tutup Buku</title>
-    <meta name="app-version" content="2.12.0-edit-store">
+    <meta name="app-version" content="2.14.0-wa-ready">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -277,6 +277,11 @@
 </div>
 
 <script>
+    // ----------------------------------------------------
+    // NOMOR WHATSAPP OWNER
+    // ----------------------------------------------------
+    const ownerPhone = "6282140784095";
+
     const firebaseConfig = {
         apiKey: "AIzaSyCVJcVrRg4w9xY__bvf_4Lfk0ENQ5X5F8E",
         authDomain: "pencatatan-keuangan-brankas.firebaseapp.com",
@@ -367,6 +372,21 @@
     function parseCleanNumber(str) { return !str ? 0 : parseFloat(str.toString().replace(/\./g, '').replace(/,/g, '')) || 0; }
     function formatRp(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num); }
     function formatInputNumber(el) { el.value = parseCleanNumber(el.value) > 0 ? formatNumber(parseCleanNumber(el.value)) : ''; }
+
+    // Fungsi helper untuk membuka WhatsApp Otomatis
+    function sendWhatsAppNotification(storeName, collectorName, amount, dateStr, typeLabel) {
+        let message = `🔔 *NOTIFIKASI PENGAMBILAN PERMEN*\n\n` +
+                      `🏪 *Toko:* ${storeName}\n` +
+                      `📦 *Jenis:* ${typeLabel}\n` +
+                      `👤 *Pengambil:* ${collectorName}\n` +
+                      `💰 *Nominal Permen:* ${formatRp(amount)}\n` +
+                      `📅 *Waktu:* ${dateStr}\n\n` +
+                      `_Pesan otomatis dari Aplikasi Tutup Buku AWW_`;
+
+        let encodedMessage = encodeURIComponent(message);
+        let waUrl = `https://wa.me/${ownerPhone}?text=${encodedMessage}`;
+        window.open(waUrl, '_blank');
+    }
 
     function addExpenseRow() {
         let container = document.getElementById('expenseRowsContainer');
@@ -498,6 +518,12 @@
         allClosings.push(newRecord);
         db.ref('store_closings').set(allClosings).then(() => {
             alert('Laporan tutup buku berhasil disimpan!');
+
+            if (isCollected) {
+                let fullDateTime = `${finalDateStr} ${timeNow}`;
+                sendWhatsAppNotification(currentStore, collectorName, physicalCash, fullDateTime, 'Pengambilan Saat Tutup Buku');
+            }
+
             document.getElementById('debitInput').value = '';
             document.getElementById('qrisInput').value = '';
             document.getElementById('physicalCashInput').value = '';
@@ -586,7 +612,6 @@
         }
     }
 
-    // --- FUNGSI EDIT LAPORAN (UNTUK TOKO & PUSAT) ---
     function openEditModal(recordId) {
         let rec = allClosings.find(i => i.id === recordId);
         if (!rec) return;
@@ -617,9 +642,7 @@
         let rec = allClosings.find(i => i.id === recordId);
         if (!rec) return;
 
-        // Catat hasil sebelum
         let beforeSummary = `Permen: ${formatRp(rec.physicalCash)}, Parkir: ${formatRp(rec.parking)}, QRIS: ${formatRp(rec.qris)}, Debit: ${formatRp(rec.debit)}`;
-        // Catat hasil sesudah
         let afterSummary = `Permen: ${formatRp(newCash)}, Parkir: ${formatRp(newPark)}, QRIS: ${formatRp(newQris)}, Debit: ${formatRp(newDebit)}`;
 
         let now = new Date();
@@ -671,9 +694,12 @@
         let formattedDate = `${p[2]}/${p[1]}/${p[0]} ${new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
 
         let updated = false;
+        let totalBulkAmount = 0;
+
         allClosings = allClosings.map(item => {
             if (item.storePoint === currentStore && !item.isCollected) {
                 updated = true;
+                totalBulkAmount += (item.physicalCash || 0);
                 return { ...item, isCollected: true, collectorName: name, collectionDate: formattedDate };
             }
             return item;
@@ -683,6 +709,8 @@
             db.ref('store_closings').set(allClosings).then(() => {
                 alert('Semua permen tertinggal di toko ini berhasil ditandai sudah diambil!');
                 document.getElementById('bulkModal').style.display = 'none';
+
+                sendWhatsAppNotification(currentStore, name, totalBulkAmount, formattedDate, 'Ambil Masal (Penarikan Rutin)');
             });
         } else {
             alert('Tidak ada permen tertinggal (semua sudah berstatus diambil).');
@@ -727,7 +755,6 @@
                 expenseFormatted += `</div>`;
             }
 
-            // Tampilkan rincian sebelum & sesudah jika pernah diedit
             let editNoteHtml = '';
             if (i.editHistory && i.editHistory.length > 0) {
                 editNoteHtml += `<div style="font-size: 0.75rem; color: #d84315; margin-top: 4px; border-top: 1px dashed #ffccbc; padding-top: 2px;"><b>Riwayat Edit:</b><br>`;
