@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Pendamping Toko AWW - Tutup Buku</title>
-    <meta name="app-version" content="2.7.2">
+    <title>Aplikasi Pendamping Toko AWW - Pusat & Tutup Buku</title>
+    <meta name="app-version" content="2.9.0-pusat">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -13,7 +13,7 @@
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; }
         body { background: #f4f6f8; margin: 0; padding: 15px; }
-        .container { max-width: 1000px; margin: auto; }
+        .container { max-width: 1100px; margin: auto; display: none; }
         .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         h2, h3 { margin-top: 0; color: #333; }
         .form-group { margin-bottom: 15px; text-align: left; }
@@ -22,12 +22,14 @@
         
         .expense-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
         .expense-row input { flex: 2; }
-        .expense-row input.nominal { flex: 1; }
         .btn-add-row { background: #00796b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; }
         .btn-del-row { background: #c62828; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
 
         .highlight-box { background: #e8f5e9; border: 2px dashed #2e7d32; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        .pusat-box { background: #e3f2fd; border: 2px dashed #1565c0; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        
         .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
+        .btn-pusat { background: #1565c0; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
         .btn-success { background: #1565c0; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; }
         .btn-cancel { background: #9e9e9e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; }
         
@@ -37,35 +39,83 @@
         th { background: #f8f9fa; }
         .vertical-details { font-size: 0.8rem; line-height: 1.4; white-space: normal; min-width: 160px; }
         .login-card { max-width: 380px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
-        .app-content { display: none; }
     </style>
 </head>
 <body>
 
-<!-- HALAMAN LOGIN PIN 5 TOKO -->
+<!-- HALAMAN LOGIN PIN -->
 <div class="login-card" id="loginCard">
-    <h2>Login Toko AWW</h2>
-    <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Masukkan PIN Akses Toko Anda</p>
+    <h2>Login Toko / Pusat AWW</h2>
+    <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Masukkan PIN Toko atau Master PIN Pusat</p>
     <div class="form-group">
-        <label>PIN Toko</label>
-        <input type="password" id="loginPinInput" placeholder="••••" maxlength="5" style="text-align: center; letter-spacing: 5px; font-size: 1.3rem;" onkeydown="if(event.key==='Enter'){ handleStoreLogin(); }">
+        <label>PIN Akses</label>
+        <input type="password" id="loginPinInput" placeholder="••••" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.3rem;" onkeydown="if(event.key==='Enter'){ handleStoreLogin(); }">
     </div>
     <button type="button" class="btn-primary" onclick="handleStoreLogin()">Masuk</button>
     <div id="loginError" style="color: #c62828; font-size: 0.85rem; margin-top: 15px;"></div>
 </div>
 
-<!-- APLIKASI UTAMA TUTUP BUKU -->
-<div class="container app-content" id="appContainer">
-    <div class="card" style="display: flex; justify-content: space-between; align-items: center; background: #2e7d32; color: white; flex-wrap: wrap; gap: 10px;">
+<!-- APLIKASI UTAMA -->
+<div class="container" id="appContainer">
+    <div class="card" style="display: flex; justify-content: space-between; align-items: center; background: #2e7d32; color: white; flex-wrap: wrap; gap: 10px;" id="headerCard">
         <div>
             <h2 id="storeTitleHeader" style="margin: 0; color: white;">🏪 Toko AWW</h2>
-            <p style="font-size: 0.85rem; margin: 5px 0 0 0;">Aplikasi Pendamping Tutup Buku Harian</p>
+            <p id="storeSubHeader" style="font-size: 0.85rem; margin: 5px 0 0 0;">Aplikasi Pendamping Tutup Buku Harian</p>
         </div>
-        <button class="btn-cancel" onclick="handleStoreLogout()" style="width: auto; padding: 6px 12px; background: #c62828;">🚪 Keluar / Ganti Toko</button>
+        <button class="btn-cancel" onclick="handleStoreLogout()" style="width: auto; padding: 6px 12px; background: #c62828;">🚪 Keluar / Ganti Akun</button>
     </div>
 
-    <!-- FORM TUTUP BUKU HARIAN -->
-    <div class="card">
+    <!-- DASHBOARD KHUSUS PUSAT (INPUT MASSAL & PANTAU SEMUA TOKO) -->
+    <div class="card" id="pusatDashboardCard" style="display: none;">
+        <h3 style="color: #1565c0;">⚙️ Panel Kontrol & Input Massal Pusat (Owner)</h3>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Gunakan form ini untuk menginput data masa lalu (awal bulan) secara cepat untuk toko mana pun tanpa harus login berulang kali.</p>
+        
+        <form onsubmit="saveBulkPusatClosing(event)">
+            <div class="pusat-box">
+                <div class="form-group">
+                    <label style="color: #1565c0;">🏪 Pilih Toko Tujuan:</label>
+                    <select id="pusatTargetStore" required>
+                        <option value="AWW Sambi">AWW Sambi</option>
+                        <option value="AWW Beji">AWW Beji</option>
+                        <option value="AWW Bandung">AWW Bandung</option>
+                        <option value="AWW Trenggalek">AWW Trenggalek</option>
+                        <option value="AWW Ponorogo">AWW Ponorogo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="color: #1565c0;">📅 Tanggal Laporan:</label>
+                    <input type="date" id="pusatDateInput" required>
+                </div>
+                <div class="form-group">
+                    <label style="color: #1565c0;">Total Kartu Debit (Rp)</label>
+                    <input type="text" id="pusatDebit" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
+                </div>
+                <div class="form-group">
+                    <label style="color: #1565c0;">Total QRIS (Rp)</label>
+                    <input type="text" id="pusatQris" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
+                </div>
+                <div class="form-group">
+                    <label style="color: #1565c0;">Total Permen Fisik / Tunai Kasir (Rp)</label>
+                    <input type="text" id="pusatPhysicalCash" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
+                </div>
+                <div class="form-group">
+                    <label style="color: #1565c0;">Total Parkir (Rp)</label>
+                    <input type="text" id="pusatParking" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="color: #1565c0;">Status Permen Fisik:</label>
+                    <select id="pusatIsCollected" required>
+                        <option value="true">🟢 Langsung Dianggap Sudah Diambil Pusat</option>
+                        <option value="false">🔴 Belum Diambil (Masih di Toko)</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-pusat">🚀 Simpan Input Massal Pusat</button>
+        </form>
+    </div>
+
+    <!-- FORM TUTUP BUKU HARIAN (UNTUK TOKO) -->
+    <div class="card" id="storeClosingFormCard">
         <h3>📝 Form Tutup Buku Harian</h3>
         <form onsubmit="saveStoreClosing(event)">
             <div class="form-group">
@@ -94,7 +144,7 @@
                 <input type="text" id="parkingInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
             </div>
 
-            <!-- BAGIAN RINCIAN PENGELUARAN DINAMIS (MULTI-BARIS) -->
+            <!-- BAGIAN RINCIAN PENGELUARAN DINAMIS -->
             <div class="form-group">
                 <label>Rincian Pengeluaran Toko</label>
                 <div id="expenseRowsContainer">
@@ -133,19 +183,20 @@
     </div>
 
     <!-- FITUR AMBIL MASAL OTOMATIS TANGGAL SEBELUMNYA -->
-    <div class="card">
+    <div class="card" id="bulkCollectCard">
         <h3>📦 Ambil Masal Permen Fisik Belum Diambil</h3>
-        <p style="font-size: 0.85rem; color: #666; margin-bottom: 12px;">Jika hari ini pusat mengambil semua permen yang tertinggal di toko (misal tarikan rutin mingguan), klik tombol di bawah ini agar semua laporan sebelumnya yang belum diambil otomatis berstatus <b>Sudah Diambil</b>.</p>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 12px;">Jika hari ini pusat mengambil semua permen yang tertinggal di toko ini, klik tombol di bawah ini.</p>
         <button type="button" class="btn-success" onclick="openBulkCollectModal()">📦 Ambil Semua Permen Tertinggal di Toko Ini</button>
     </div>
 
     <!-- RIWAYAT LAPORAN -->
     <div class="card">
-        <h3>📋 Riwayat Laporan Toko Ini</h3>
+        <h3 id="historyTitleLabel">📋 Riwayat Laporan Toko Ini</h3>
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
+                        <th>Toko</th>
                         <th>Tanggal & Waktu</th>
                         <th>Permen Fisik</th>
                         <th>Parkir</th>
@@ -156,7 +207,7 @@
                     </tr>
                 </thead>
                 <tbody id="historyTableBody">
-                    <tr><td colspan="7" style="text-align: center; color: #777;">Memuat data...</td></tr>
+                    <tr><td colspan="8" style="text-align: center; color: #777;">Memuat data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -194,37 +245,64 @@
 
     let allClosings = [];
     let currentStore = null;
+    let isPusatMode = false;
     
     const pinToStoreMap = {
         '64176': 'AWW Sambi',
         '66233': 'AWW Beji',
         '66274': 'AWW Bandung',
         '66313': 'AWW Trenggalek',
-        '63416': 'AWW Ponorogo'
+        '63416': 'AWW Ponorogo',
+        '945336': 'PUSAT' // Master PIN
     };
 
     function handleStoreLogin() {
         let pin = document.getElementById('loginPinInput').value.trim();
 
         if (pinToStoreMap.hasOwnProperty(pin)) {
-            currentStore = pinToStoreMap[pin];
+            let mappedVal = pinToStoreMap[pin];
             document.getElementById('loginCard').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
-            document.getElementById('storeTitleHeader').innerText = `🏪 ${currentStore}`;
             
             let todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('collectionDateInput').value = todayStr;
             document.getElementById('closingDateInput').value = todayStr;
+            document.getElementById('pusatDateInput').value = todayStr;
+
+            if (mappedVal === 'PUSAT') {
+                isPusatMode = true;
+                currentStore = 'PUSAT';
+                document.getElementById('headerCard').style.background = '#1565c0';
+                document.getElementById('storeTitleHeader').innerText = `👑 DASHBOARD PUSAT (OWNER)`;
+                document.getElementById('storeSubHeader').innerText = `Akses Seluruh Toko & Input Massal`;
+                
+                document.getElementById('pusatDashboardCard').style.display = 'block';
+                document.getElementById('storeClosingFormCard').style.display = 'none';
+                document.getElementById('bulkCollectCard').style.display = 'none';
+                document.getElementById('historyTitleLabel').innerText = `📋 Riwayat Laporan Seluruh Toko`;
+            } else {
+                isPusatMode = false;
+                currentStore = mappedVal;
+                document.getElementById('headerCard').style.background = '#2e7d32';
+                document.getElementById('storeTitleHeader').innerText = `🏪 ${currentStore}`;
+                document.getElementById('storeSubHeader').innerText = `Aplikasi Pendamping Tutup Buku Harian`;
+                
+                document.getElementById('pusatDashboardCard').style.display = 'none';
+                document.getElementById('storeClosingFormCard').style.display = 'block';
+                document.getElementById('bulkCollectCard').style.display = 'block';
+                document.getElementById('historyTitleLabel').innerText = `📋 Riwayat Laporan Toko Ini`;
+            }
             
             loadData();
         } else {
-            document.getElementById('loginError').innerText = 'PIN Toko Salah!';
+            document.getElementById('loginError').innerText = 'PIN Akses Salah!';
             document.getElementById('loginPinInput').value = '';
         }
     }
 
     function handleStoreLogout() {
         currentStore = null;
+        isPusatMode = false;
         document.getElementById('loginCard').style.display = 'block';
         document.getElementById('appContainer').style.display = 'none';
         document.getElementById('loginPinInput').value = '';
@@ -274,6 +352,7 @@
         document.getElementById('collectorSection').style.display = val === 'true' ? 'block' : 'none';
     }
 
+    // SIMPAN TUTUP BUKU NORMAL (UNTUK TOKO)
     function saveStoreClosing(e) {
         e.preventDefault();
         let debit = parseCleanNumber(document.getElementById('debitInput').value);
@@ -356,6 +435,56 @@
         });
     }
 
+    // SIMPAN INPUT MASSAL DARI PUSAT (UNTUK AWAL BULAN / SUSULAN)
+    function saveBulkPusatClosing(e) {
+        e.preventDefault();
+        let targetStore = document.getElementById('pusatTargetStore').value;
+        let rawDate = document.getElementById('pusatDateInput').value;
+        let debit = parseCleanNumber(document.getElementById('pusatDebit').value);
+        let qris = parseCleanNumber(document.getElementById('pusatQris').value);
+        let physicalCash = parseCleanNumber(document.getElementById('pusatPhysicalCash').value);
+        let parking = parseCleanNumber(document.getElementById('pusatParking').value);
+        let isCollected = document.getElementById('pusatIsCollected').value === 'true';
+
+        if (!rawDate) { alert('Tanggal laporan wajib diisi!'); return; }
+
+        let p = rawDate.split('-');
+        let finalDateStr = `${p[2]}/${p[1]}/${p[0]}`;
+        let now = new Date();
+        let timeNow = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+        let collectionDateFormatted = isCollected ? `${p[2]}/${p[1]}/${p[0]} ${timeNow}` : '-';
+        let collectorName = isCollected ? 'Pusat (Input Massal)' : '-';
+
+        let computerOmset = debit + qris + physicalCash;
+
+        let newRecord = {
+            id: Date.now(),
+            storePoint: targetStore,
+            debit,
+            qris,
+            physicalCash,
+            parking,
+            computerOmset,
+            expenseDesc: '-',
+            isCollected,
+            collectorName,
+            collectionDate: collectionDateFormatted,
+            date: finalDateStr,
+            time: timeNow
+        };
+
+        allClosings.push(newRecord);
+        db.ref('store_closings').set(allClosings).then(() => {
+            alert(`Berhasil! Data massal untuk ${targetStore} tanggal ${finalDateStr} berhasil disimpan.`);
+            document.getElementById('pusatDebit').value = '';
+            document.getElementById('pusatQris').value = '';
+            document.getElementById('pusatPhysicalCash').value = '';
+            document.getElementById('pusatParking').value = '';
+            document.getElementById('pusatDateInput').value = new Date().toISOString().split('T')[0];
+        });
+    }
+
     function openBulkCollectModal() {
         document.getElementById('bulkCollectorName').value = '';
         document.getElementById('bulkCollectionDate').value = new Date().toISOString().split('T')[0];
@@ -394,17 +523,19 @@
         let tbody = document.getElementById('historyTableBody');
         tbody.innerHTML = '';
         
-        let storeLogs = allClosings.filter(i => i.storePoint === currentStore);
+        // Jika mode pusat, tampilkan semua toko. Jika mode toko, filter khusus toko tersebut.
+        let storeLogs = isPusatMode ? allClosings : allClosings.filter(i => i.storePoint === currentStore);
+        
         if (storeLogs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777;">Belum ada riwayat laporan untuk toko ini.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #777;">Belum ada riwayat laporan.</td></tr>`;
             return;
         }
 
-        // Mengurutkan data berdasarkan Tanggal Asli Laporan (dari tanggal terkini/terbaru ke tanggal terlama)
+        // Urutkan dari tanggal terkini/terbaru ke tanggal terlama
         storeLogs.sort((a, b) => {
             let parseDateStr = (dStr) => {
                 if (!dStr) return 0;
-                let parts = dStr.split('/'); // Format DD/MM/YYYY
+                let parts = dStr.split('/');
                 if (parts.length === 3) {
                     return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
                 }
@@ -428,6 +559,7 @@
             }
 
             tbody.innerHTML += `<tr>
+                <td><b>${i.storePoint}</b></td>
                 <td>${i.date} ${i.time || ''}</td>
                 <td style="color: #2e7d32; font-weight: bold;">${formatRp(i.physicalCash || 0)}</td>
                 <td style="color: #00796b;">${formatRp(i.parking || 0)}</td>
