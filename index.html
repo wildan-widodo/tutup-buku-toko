@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Pusat & Tutup Buku</title>
-    <meta name="app-version" content="2.10.0-bulk">
+    <meta name="app-version" content="2.12.0-edit-store">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -40,6 +40,7 @@
         .btn-pusat { background: #1565c0; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
         .btn-success { background: #1565c0; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; }
         .btn-cancel { background: #9e9e9e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; }
+        .btn-edit { background: #e0f2f1; color: #00796b; border: 1px solid #b2dfdb; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
         
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -47,14 +48,17 @@
         th { background: #f8f9fa; }
         .vertical-details { font-size: 0.8rem; line-height: 1.4; white-space: normal; min-width: 160px; }
         .login-card { max-width: 380px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 450px; text-align: left; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
 <!-- HALAMAN LOGIN PIN -->
 <div class="login-card" id="loginCard">
-    <h2>Login Toko / Pusat AWW</h2>
-    <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Masukkan PIN Toko atau Master PIN Pusat</p>
+    <h2>Login Toko AWW</h2>
+    <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Masukkan PIN Akses Toko Anda</p>
     <div class="form-group">
         <label>PIN Akses</label>
         <input type="password" id="loginPinInput" placeholder="••••" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.3rem;" onkeydown="if(event.key==='Enter'){ handleStoreLogin(); }">
@@ -76,7 +80,7 @@
     <!-- DASHBOARD PUSAT: INPUT MASSAL MULTI-TANGGAL -->
     <div class="card" id="pusatDashboardCard" style="display: none;">
         <h3 style="color: #1565c0;">⚙️ Panel Input Massal Multi-Tanggal (Pusat / Owner)</h3>
-        <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Pilih toko, lalu tambahkan baris tanggal sebanyak yang Anda butuhkan (misal awal bulan yang belum terinput). Setelah semua terisi, klik <b>Konfirmasi & Simpan Semua</b> di bawah.</p>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Pilih toko, lalu tambahkan baris tanggal sebanyak yang Anda butuhkan. Setelah semua terisi, klik <b>Konfirmasi & Simpan Semua</b> di bawah.</p>
         
         <div class="pusat-box">
             <div class="form-group" style="max-width: 400px;">
@@ -103,7 +107,6 @@
             </div>
 
             <div id="bulkRowsContainer">
-                <!-- Baris default pertama -->
                 <div class="bulk-input-row">
                     <input type="date" class="bulk-date" required>
                     <input type="text" class="bulk-cash" inputmode="numeric" placeholder="Permen Fisik" oninput="formatInputNumber(this)" required>
@@ -206,6 +209,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Aksi</th>
                         <th>Toko</th>
                         <th>Tanggal & Waktu</th>
                         <th>Permen Fisik</th>
@@ -217,7 +221,7 @@
                     </tr>
                 </thead>
                 <tbody id="historyTableBody">
-                    <tr><td colspan="8" style="text-align: center; color: #777;">Memuat data...</td></tr>
+                    <tr><td colspan="9" style="text-align: center; color: #777;">Memuat data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -225,8 +229,8 @@
 </div>
 
 <!-- MODAL AMBIL MASAL -->
-<div class="modal" id="bulkModal" style="display:none; position:fixed; z-index:10; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-    <div class="modal-content" style="background:white; padding:20px; border-radius:8px; width:350px; text-align:center;">
+<div class="modal" id="bulkModal">
+    <div class="modal-content" style="width: 350px; text-align: center;">
         <h3>Konfirmasi Ambil Masal</h3>
         <p style="font-size:0.85rem; color:#666;">Semua sisa permen yang belum diambil di toko ini akan ditandai sudah diambil.</p>
         <div class="form-group"><label>Nama Pengambil / Petugas</label><input type="text" id="bulkCollectorName" placeholder="Contoh: Budi"></div>
@@ -234,6 +238,40 @@
         <div style="display:flex; gap:10px; margin-top:15px;">
             <button class="btn-cancel" onclick="document.getElementById('bulkModal').style.display='none'">Batal</button>
             <button class="btn-primary" onclick="confirmBulkCollection()" style="background:#1565c0;">Proses Ambil</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDIT LAPORAN -->
+<div class="modal" id="editModal">
+    <div class="modal-content">
+        <h3>✏️ Edit Laporan Tutup Buku</h3>
+        <input type="hidden" id="editRecordId">
+        
+        <div class="form-group">
+            <label>Total Permen Fisik (Rp)</label>
+            <input type="text" id="editPhysicalCash" inputmode="numeric" oninput="formatInputNumber(this)" required>
+        </div>
+        <div class="form-group">
+            <label>Total Parkir (Rp)</label>
+            <input type="text" id="editParking" inputmode="numeric" oninput="formatInputNumber(this)" required>
+        </div>
+        <div class="form-group">
+            <label>Total QRIS (Rp)</label>
+            <input type="text" id="editQris" inputmode="numeric" oninput="formatInputNumber(this)" required>
+        </div>
+        <div class="form-group">
+            <label>Total Kartu Debit (Rp)</label>
+            <input type="text" id="editDebit" inputmode="numeric" oninput="formatInputNumber(this)" required>
+        </div>
+        <div class="form-group" style="background: #fff3e0; padding: 10px; border-radius: 4px; border: 1px solid #ffe0b2;">
+            <label style="color: #e65100;">⚠️ Alasan Mengedit Laporan (Wajib):</label>
+            <input type="text" id="editReasonInput" placeholder="Contoh: Koreksi nominal salah ketik kasir" required style="background: #fff;">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="btn-cancel" onclick="document.getElementById('editModal').style.display='none'">Batal</button>
+            <button class="btn-primary" onclick="submitEditRecord()" style="background:#00796b;">Simpan Perubahan</button>
         </div>
     </div>
 </div>
@@ -263,7 +301,7 @@
         '66274': 'AWW Bandung',
         '66313': 'AWW Trenggalek',
         '63416': 'AWW Ponorogo',
-        '945336': 'PUSAT' // Master PIN
+        '123123': 'PUSAT' // Master PIN
     };
 
     function handleStoreLogin() {
@@ -361,7 +399,6 @@
         document.getElementById('collectorSection').style.display = val === 'true' ? 'block' : 'none';
     }
 
-    // --- FITUR TAMBAH & HAPUS BARIS MULTI-TANGGAL PUSAT ---
     function addBulkRow() {
         let container = document.getElementById('bulkRowsContainer');
         let div = document.createElement('div');
@@ -376,7 +413,7 @@
                 <option value="true">🟢 Diambil</option>
                 <option value="false">🔴 Belum Diambil</option>
             </select>
-            <button type="button" class="btn-del-row" onclick="removeBulkRow(this)">✕</button>
+            <button type="button" class="btn-del-row" onclick="removeBulkRow(this)" style="display:none;">✕</button>
         `;
         container.appendChild(div);
         updateBulkDeleteButtons();
@@ -395,7 +432,6 @@
         });
     }
 
-    // SIMPAN TUTUP BUKU NORMAL (UNTUK TOKO)
     function saveStoreClosing(e) {
         e.preventDefault();
         let debit = parseCleanNumber(document.getElementById('debitInput').value);
@@ -455,7 +491,8 @@
             collectorName: collectorName || 'Pusat',
             collectionDate: collectionDateFormatted,
             date: finalDateStr,
-            time: timeNow
+            time: timeNow,
+            editHistory: []
         };
 
         allClosings.push(newRecord);
@@ -479,7 +516,6 @@
         });
     }
 
-    // KONFIRMASI & SIMPAN MASSAL MULTI-TANGGAL DARI PUSAT
     function confirmAndSaveBulkPusat() {
         let targetStore = document.getElementById('pusatTargetStore').value;
         let rows = document.querySelectorAll('.bulk-input-row');
@@ -505,7 +541,7 @@
             let computerOmset = debit + qris + physicalCash;
 
             newRecords.push({
-                id: Date.now() + Math.random(), // Unique ID per baris
+                id: Date.now() + Math.random(),
                 storePoint: targetStore,
                 debit,
                 qris,
@@ -517,7 +553,8 @@
                 collectorName,
                 collectionDate: collectionDateFormatted,
                 date: finalDateStr,
-                time: timeNow
+                time: timeNow,
+                editHistory: []
             });
         });
 
@@ -531,8 +568,6 @@
 
             db.ref('store_closings').set(allClosings).then(() => {
                 alert(`Berhasil! ${newRecords.length} laporan untuk ${targetStore} berhasil tersimpan sekaligus.`);
-                
-                // Reset form bulk menjadi 1 baris kosong
                 document.getElementById('bulkRowsContainer').innerHTML = `
                     <div class="bulk-input-row">
                         <input type="date" class="bulk-date" required>
@@ -549,6 +584,76 @@
                 `;
             });
         }
+    }
+
+    // --- FUNGSI EDIT LAPORAN (UNTUK TOKO & PUSAT) ---
+    function openEditModal(recordId) {
+        let rec = allClosings.find(i => i.id === recordId);
+        if (!rec) return;
+
+        document.getElementById('editRecordId').value = rec.id;
+        document.getElementById('editPhysicalCash').value = formatNumber(rec.physicalCash || 0);
+        document.getElementById('editParking').value = formatNumber(rec.parking || 0);
+        document.getElementById('editQris').value = formatNumber(rec.qris || 0);
+        document.getElementById('editDebit').value = formatNumber(rec.debit || 0);
+        document.getElementById('editReasonInput').value = '';
+
+        document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function submitEditRecord() {
+        let recordId = parseFloat(document.getElementById('editRecordId').value);
+        let newCash = parseCleanNumber(document.getElementById('editPhysicalCash').value);
+        let newPark = parseCleanNumber(document.getElementById('editParking').value);
+        let newQris = parseCleanNumber(document.getElementById('editQris').value);
+        let newDebit = parseCleanNumber(document.getElementById('editDebit').value);
+        let reason = document.getElementById('editReasonInput').value.trim();
+
+        if (!reason) {
+            alert('Alasan mengedit laporan wajib diisi!');
+            return;
+        }
+
+        let rec = allClosings.find(i => i.id === recordId);
+        if (!rec) return;
+
+        // Catat hasil sebelum
+        let beforeSummary = `Permen: ${formatRp(rec.physicalCash)}, Parkir: ${formatRp(rec.parking)}, QRIS: ${formatRp(rec.qris)}, Debit: ${formatRp(rec.debit)}`;
+        // Catat hasil sesudah
+        let afterSummary = `Permen: ${formatRp(newCash)}, Parkir: ${formatRp(newPark)}, QRIS: ${formatRp(newQris)}, Debit: ${formatRp(newDebit)}`;
+
+        let now = new Date();
+        let editTimestamp = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
+        
+        let editLog = {
+            timestamp: editTimestamp,
+            reason: reason,
+            before: beforeSummary,
+            after: afterSummary
+        };
+
+        allClosings = allClosings.map(item => {
+            if (item.id === recordId) {
+                let history = item.editHistory || [];
+                history.push(editLog);
+                let computerOmset = newDebit + newQris + newCash;
+                return {
+                    ...item,
+                    physicalCash: newCash,
+                    parking: newPark,
+                    qris: newQris,
+                    debit: newDebit,
+                    computerOmset,
+                    editHistory: history
+                };
+            }
+            return item;
+        });
+
+        db.ref('store_closings').set(allClosings).then(() => {
+            alert('Laporan berhasil diperbarui!');
+            document.getElementById('editModal').style.display = 'none';
+        });
     }
 
     function openBulkCollectModal() {
@@ -592,11 +697,10 @@
         let storeLogs = isPusatMode ? allClosings : allClosings.filter(i => i.storePoint === currentStore);
         
         if (storeLogs.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #777;">Belum ada riwayat laporan.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #777;">Belum ada riwayat laporan.</td></tr>`;
             return;
         }
 
-        // Urutkan dari tanggal terkini/terbaru ke tanggal terlama
         storeLogs.sort((a, b) => {
             let parseDateStr = (dStr) => {
                 if (!dStr) return 0;
@@ -606,7 +710,7 @@
                 }
                 return 0;
             };
-            return parseDateStr(b.date) - parseDateStr(dStr = a.date);
+            return parseDateStr(b.date) - parseDateStr(a.date);
         });
 
         storeLogs.forEach(i => {
@@ -623,7 +727,18 @@
                 expenseFormatted += `</div>`;
             }
 
+            // Tampilkan rincian sebelum & sesudah jika pernah diedit
+            let editNoteHtml = '';
+            if (i.editHistory && i.editHistory.length > 0) {
+                editNoteHtml += `<div style="font-size: 0.75rem; color: #d84315; margin-top: 4px; border-top: 1px dashed #ffccbc; padding-top: 2px;"><b>Riwayat Edit:</b><br>`;
+                i.editHistory.forEach(log => {
+                    editNoteHtml += `• <i>(${log.timestamp})</i><br>&nbsp;&nbsp;<b>Alasan:</b> ${log.reason}<br>&nbsp;&nbsp;<b>Sebelum:</b> ${log.before}<br>&nbsp;&nbsp;<b>Sesudah:</b> ${log.after}<br>`;
+                });
+                editNoteHtml += `</div>`;
+            }
+
             tbody.innerHTML += `<tr>
+                <td><button class="btn-edit" onclick="openEditModal(${i.id})">✏️ Edit</button></td>
                 <td><b>${i.storePoint}</b></td>
                 <td>${i.date} ${i.time || ''}</td>
                 <td style="color: #2e7d32; font-weight: bold;">${formatRp(i.physicalCash || 0)}</td>
@@ -631,7 +746,7 @@
                 <td style="color: #6a1b9a;">${formatRp(i.qris || 0)}</td>
                 <td style="color: #1565c0;">${formatRp(i.debit || 0)}</td>
                 <td>${expenseFormatted}</td>
-                <td>${status}</td>
+                <td>${status} ${editNoteHtml}</td>
             </tr>`;
         });
     }
