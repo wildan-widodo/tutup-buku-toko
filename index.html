@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Pusat & Tutup Buku</title>
-    <meta name="app-version" content="2.15.0-delete-master">
+    <meta name="app-version" content="2.16.0-wa-custom">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -333,7 +333,7 @@
                 document.getElementById('storeClosingFormCard').style.display = 'none';
                 document.getElementById('bulkCollectCard').style.display = 'none';
                 document.getElementById('historyTitleLabel').innerText = `📋 Riwayat Laporan Seluruh Toko`;
-                document.getElementById('thActionHeader').style.display = 'table-cell'; // Tampilkan kolom aksi master
+                document.getElementById('thActionHeader').style.display = 'table-cell';
             } else {
                 isPusatMode = false;
                 currentStore = mappedVal;
@@ -345,7 +345,7 @@
                 document.getElementById('storeClosingFormCard').style.display = 'block';
                 document.getElementById('bulkCollectCard').style.display = 'block';
                 document.getElementById('historyTitleLabel').innerText = `📋 Riwayat Laporan Toko Ini`;
-                document.getElementById('thActionHeader').style.display = 'none'; // Sembunyikan untuk toko biasa
+                document.getElementById('thActionHeader').style.display = 'none';
             }
             
             loadData();
@@ -376,14 +376,15 @@
     function formatRp(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num); }
     function formatInputNumber(el) { el.value = parseCleanNumber(el.value) > 0 ? formatNumber(parseCleanNumber(el.value)) : ''; }
 
-    // Fungsi helper untuk membuka WhatsApp Otomatis
-    function sendWhatsAppNotification(storeName, collectorName, amount, dateStr, typeLabel) {
-        let message = `🔔 *NOTIFIKASI PENGAMBILAN PERMEN*\n\n` +
+    // Fungsi helper untuk membuka WhatsApp Otomatis dengan Format Baru
+    function sendWhatsAppNotification(storeName, collectorName, amount, dateStr, typeLabel, startDate = "-", endDate = "-") {
+        let message = `*PENGAMBILAN PERMEN*\n\n` +
                       `🏪 *Toko:* ${storeName}\n` +
                       `📦 *Jenis:* ${typeLabel}\n` +
                       `👤 *Pengambil:* ${collectorName}\n` +
                       `💰 *Nominal Permen:* ${formatRp(amount)}\n` +
-                      `📅 *Waktu:* ${dateStr}\n\n` +
+                      `📅 *Periode Permen:* ${startDate} s/d ${endDate}\n` +
+                      `⏰ *Waktu Ambil:* ${dateStr}\n\n` +
                       `_Pesan otomatis dari Aplikasi Tutup Buku AWW_`;
 
         let encodedMessage = encodeURIComponent(message);
@@ -524,7 +525,7 @@
 
             if (isCollected) {
                 let fullDateTime = `${finalDateStr} ${timeNow}`;
-                sendWhatsAppNotification(currentStore, collectorName, physicalCash, fullDateTime, 'Pengambilan Saat Tutup Buku');
+                sendWhatsAppNotification(currentStore, collectorName, physicalCash, fullDateTime, 'Pengambilan Saat Tutup Buku', finalDateStr, finalDateStr);
             }
 
             document.getElementById('debitInput').value = '';
@@ -682,7 +683,6 @@
         });
     }
 
-    // --- FUNGSI HAPUS LAPORAN KHUSUS MASTER (PUSAT) ---
     function deleteRecord(recordId) {
         if (!isPusatMode) {
             alert('Akses ditolak! Hanya Master PIN yang dapat menghapus riwayat laporan.');
@@ -713,11 +713,13 @@
 
         let updated = false;
         let totalBulkAmount = 0;
+        let datesList = [];
 
         allClosings = allClosings.map(item => {
             if (item.storePoint === currentStore && !item.isCollected) {
                 updated = true;
                 totalBulkAmount += (item.physicalCash || 0);
+                if (item.date) datesList.push(item.date);
                 return { ...item, isCollected: true, collectorName: name, collectionDate: formattedDate };
             }
             return item;
@@ -728,7 +730,10 @@
                 alert('Semua permen tertinggal di toko ini berhasil ditandai sudah diambil!');
                 document.getElementById('bulkModal').style.display = 'none';
 
-                sendWhatsAppNotification(currentStore, name, totalBulkAmount, formattedDate, 'Ambil Masal (Penarikan Rutin)');
+                let startDate = datesList.length > 0 ? datesList[datesList.length - 1] : '-';
+                let endDate = datesList.length > 0 ? datesList[0] : '-';
+
+                sendWhatsAppNotification(currentStore, name, totalBulkAmount, formattedDate, 'Ambil Masal (Penarikan Rutin)', startDate, endDate);
             });
         } else {
             alert('Tidak ada permen tertinggal (semua sudah berstatus diambil).');
