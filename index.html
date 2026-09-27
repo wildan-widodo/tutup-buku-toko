@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Pusat & Tutup Buku</title>
-    <meta name="app-version" content="2.16.0-wa-custom">
+    <meta name="app-version" content="2.18.0-checkpoint-pusat-edit">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -246,7 +246,7 @@
 <!-- MODAL EDIT LAPORAN -->
 <div class="modal" id="editModal">
     <div class="modal-content">
-        <h3>✏️ Edit Laporan Tutup Buku</h3>
+        <h3>✏️ Edit Laporan Tutup Buku (Pusat)</h3>
         <input type="hidden" id="editRecordId">
         
         <div class="form-group">
@@ -265,9 +265,19 @@
             <label>Total Kartu Debit (Rp)</label>
             <input type="text" id="editDebit" inputmode="numeric" oninput="formatInputNumber(this)" required>
         </div>
+
+        <!-- OPSI EDIT STATUS PENGAMBILAN PERMEN -->
+        <div class="form-group" style="background: #e8f5e9; padding: 12px; border-radius: 6px; border: 1px solid #c8e6c9;">
+            <label style="color: #1b5e20;">🍬 Ralat Status Pengambilan Permen:</label>
+            <select id="editStatusPermen" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; background: #fff;">
+                <option value="false">❌ Belum Diambil (Masih di Toko)</option>
+                <option value="true">🟢 Sudah Diambil</option>
+            </select>
+        </div>
+
         <div class="form-group" style="background: #fff3e0; padding: 10px; border-radius: 4px; border: 1px solid #ffe0b2;">
             <label style="color: #e65100;">⚠️ Alasan Mengedit Laporan (Wajib):</label>
-            <input type="text" id="editReasonInput" placeholder="Contoh: Koreksi nominal salah ketik kasir" required style="background: #fff;">
+            <input type="text" id="editReasonInput" placeholder="Contoh: Ralat status permen tanggal tersebut ternyata belum diambil" required style="background: #fff;">
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -279,7 +289,7 @@
 
 <script>
     // ----------------------------------------------------
-    // NOMOR WHATSAPP OWNER
+    // NOMOR WHATSAPP OWNER (CHECKPOINT)
     // ----------------------------------------------------
     const ownerPhone = "6281555351838";
 
@@ -326,6 +336,7 @@
                 isPusatMode = true;
                 currentStore = 'PUSAT';
                 document.getElementById('headerCard').style.background = '#1565c0';
+                document.getElementById('storeTitleHeader', '👑 DASHBOARD PUSAT (OWNER)');
                 document.getElementById('storeTitleHeader').innerText = `👑 DASHBOARD PUSAT (OWNER)`;
                 document.getElementById('storeSubHeader').innerText = `Akses Seluruh Toko & Input Massal Multi-Tanggal`;
                 
@@ -376,7 +387,6 @@
     function formatRp(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num); }
     function formatInputNumber(el) { el.value = parseCleanNumber(el.value) > 0 ? formatNumber(parseCleanNumber(el.value)) : ''; }
 
-    // Fungsi helper untuk membuka WhatsApp Otomatis dengan Format Baru
     function sendWhatsAppNotification(storeName, collectorName, amount, dateStr, typeLabel, startDate = "-", endDate = "-") {
         let message = `*PENGAMBILAN PERMEN*\n\n` +
                       `🏪 *Toko:* ${storeName}\n` +
@@ -625,6 +635,9 @@
         document.getElementById('editParking').value = formatNumber(rec.parking || 0);
         document.getElementById('editQris').value = formatNumber(rec.qris || 0);
         document.getElementById('editDebit').value = formatNumber(rec.debit || 0);
+        
+        // Load status permen ke select modal edit pusat
+        document.getElementById('editStatusPermen').value = rec.isCollected ? "true" : "false";
         document.getElementById('editReasonInput').value = '';
 
         document.getElementById('editModal').style.display = 'flex';
@@ -636,6 +649,8 @@
         let newPark = parseCleanNumber(document.getElementById('editParking').value);
         let newQris = parseCleanNumber(document.getElementById('editQris').value);
         let newDebit = parseCleanNumber(document.getElementById('editDebit').value);
+        
+        let isCollectedVal = document.getElementById('editStatusPermen').value === "true";
         let reason = document.getElementById('editReasonInput').value.trim();
 
         if (!reason) {
@@ -646,8 +661,8 @@
         let rec = allClosings.find(i => i.id === recordId);
         if (!rec) return;
 
-        let beforeSummary = `Permen: ${formatRp(rec.physicalCash)}, Parkir: ${formatRp(rec.parking)}, QRIS: ${formatRp(rec.qris)}, Debit: ${formatRp(rec.debit)}`;
-        let afterSummary = `Permen: ${formatRp(newCash)}, Parkir: ${formatRp(newPark)}, QRIS: ${formatRp(newQris)}, Debit: ${formatRp(newDebit)}`;
+        let beforeSummary = `Permen: ${formatRp(rec.physicalCash)}, Parkir: ${formatRp(rec.parking)}, QRIS: ${formatRp(rec.qris)}, Debit: ${formatRp(rec.debit)}, Status: ${rec.isCollected ? 'Sudah Diambil' : 'Belum Diambil'}`;
+        let afterSummary = `Permen: ${formatRp(newCash)}, Parkir: ${formatRp(newPark)}, QRIS: ${formatRp(newQris)}, Debit: ${formatRp(newDebit)}, Status: ${isCollectedVal ? 'Sudah Diambil' : 'Belum Diambil'}`;
 
         let now = new Date();
         let editTimestamp = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
@@ -671,6 +686,9 @@
                     qris: newQris,
                     debit: newDebit,
                     computerOmset,
+                    isCollected: isCollectedVal,
+                    collectorName: isCollectedVal ? (item.collectorName || 'Pusat (Ralat Owner)') : 'Pusat',
+                    collectionDate: isCollectedVal ? (item.collectionDate !== '-' ? item.collectionDate : editTimestamp) : '-',
                     editHistory: history
                 };
             }
@@ -678,7 +696,7 @@
         });
 
         db.ref('store_closings').set(allClosings).then(() => {
-            alert('Laporan berhasil diperbarui!');
+            alert('Laporan dan ralat status pengambilan permen berhasil disimpan!');
             document.getElementById('editModal').style.display = 'none';
         });
     }
@@ -767,8 +785,8 @@
 
         storeLogs.forEach(i => {
             let status = i.isCollected ? 
-                `<span style="color: #2e7d32; font-size: 0.8rem;"><b>Diambil</b><br>Oleh: ${i.collectorName}<br>(${i.collectionDate})</span>` : 
-                `<span style="color: #c62828; font-size: 0.8rem;">Belum Diambil</span>`;
+                `<span style="color: #2e7d32; font-size: 0.8rem;"><b>✔ Sudah Diambil</b><br>Oleh: ${i.collectorName || 'Pusat'}<br>(${i.collectionDate || '-'})</span>` : 
+                `<span style="color: #c62828; font-size: 0.8rem;"><b>❌ Belum Diambil</b></span>`;
 
             let expenseFormatted = '-';
             if (i.expenseDesc && i.expenseDesc !== '-') {
@@ -781,7 +799,7 @@
 
             let editNoteHtml = '';
             if (i.editHistory && i.editHistory.length > 0) {
-                editNoteHtml += `<div style="font-size: 0.75rem; color: #d84315; margin-top: 4px; border-top: 1px dashed #ffccbc; padding-top: 2px;"><b>Riwayat Edit:</b><br>`;
+                editNoteHtml += `<div style="font-size: 0.75rem; color: #d84315; margin-top: 4px; border-top: 1px dashed #ffccbc; padding-top: 2px;"><b>Riwayat Edit / Ralat:</b><br>`;
                 i.editHistory.forEach(log => {
                     editNoteHtml += `• <i>(${log.timestamp})</i><br>&nbsp;&nbsp;<b>Alasan:</b> ${log.reason}<br>&nbsp;&nbsp;<b>Sebelum:</b> ${log.before}<br>&nbsp;&nbsp;<b>Sesudah:</b> ${log.after}<br>`;
                 });
@@ -789,7 +807,7 @@
             }
 
             let actionTd = isPusatMode ? `<td>
-                <button class="btn-edit" onclick="openEditModal(${i.id})">✏️ Edit</button>
+                <button class="btn-edit" onclick="openEditModal(${i.id})">✏️ Edit / Ralat</button>
                 <button class="btn-delete" onclick="deleteRecord(${i.id})">🗑️ Hapus</button>
             </td>` : '';
 
