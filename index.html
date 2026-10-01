@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Pusat & Tutup Buku</title>
-    <meta name="app-version" content="2.19.0-checkpoint-waktu-wa">
+    <meta name="app-version" content="2.18.0-checkpoint-pusat-edit">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -27,7 +27,6 @@
 
         .highlight-box { background: #e8f5e9; border: 2px dashed #2e7d32; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
         .pusat-box { background: #e3f2fd; border: 2px dashed #1565c0; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        .time-box { background: #fffde7; border: 2px dashed #fbc02d; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
         
         .bulk-input-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
         .bulk-input-row input.bulk-date { flex: 1.5; }
@@ -38,7 +37,6 @@
         .bulk-input-row select.bulk-status { flex: 1.3; }
 
         .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
-        .btn-whatsapp { background: #2e7d32; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; margin-top: 10px; }
         .btn-pusat { background: #1565c0; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
         .btn-success { background: #1565c0; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; }
         .btn-cancel { background: #9e9e9e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; }
@@ -140,18 +138,6 @@
                 <small style="color: #666; font-size: 0.75rem;">Biarkan kosong jika ingin menggunakan tanggal hari ini secara otomatis.</small>
             </div>
 
-            <!-- OPSI WAKTU PENARIKAN (BATAS JAM 21.00 / 9 MALAM) -->
-            <div class="time-box">
-                <div class="form-group" style="margin-bottom: 5px;">
-                    <label style="color: #f57f17;">⏰ Waktu Penarikan / Pengambilan:</label>
-                    <input type="time" id="closingTimeInput" required onchange="checkTimeValidation()">
-                </div>
-                <small id="timeWarningNote" style="color: #c62828; font-weight: bold; font-size: 0.8rem;"></small>
-                <div style="font-size: 0.75rem; color: #555; margin-top: 4px;">
-                    ℹ️ *Catatan Waktu:* Penarikan harus dilakukan <b>sebelum jam 21.00 (Jam 9 Malam)</b>. Jika ditarik di bawah jam 21.00 pada hari tersebut, permen/setoran akan sah masuk ke rekapitulasi tanggal berjalan.
-                </div>
-            </div>
-
             <div class="form-group">
                 <label>Total Kartu Debit (Rp)</label>
                 <input type="text" id="debitInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
@@ -207,7 +193,6 @@
             </div>
 
             <button type="submit" class="btn-primary">Kirim Laporan Tutup Buku</button>
-            <button type="button" class="btn-whatsapp" onclick="sendDirectWhatsAppPreview()">📤 Kirim Rekap via WhatsApp</button>
         </form>
     </div>
 
@@ -344,17 +329,14 @@
             document.getElementById('appContainer').style.display = 'block';
             
             let todayStr = new Date().toISOString().split('T')[0];
-            let nowTimeStr = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12:false});
-            
             document.getElementById('collectionDateInput').value = todayStr;
             document.getElementById('closingDateInput').value = todayStr;
-            document.getElementById('closingTimeInput').value = nowTimeStr;
-            checkTimeValidation();
 
             if (mappedVal === 'PUSAT') {
                 isPusatMode = true;
                 currentStore = 'PUSAT';
                 document.getElementById('headerCard').style.background = '#1565c0';
+                document.getElementById('storeTitleHeader', '👑 DASHBOARD PUSAT (OWNER)');
                 document.getElementById('storeTitleHeader').innerText = `👑 DASHBOARD PUSAT (OWNER)`;
                 document.getElementById('storeSubHeader').innerText = `Akses Seluruh Toko & Input Massal Multi-Tanggal`;
                 
@@ -405,20 +387,6 @@
     function formatRp(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num); }
     function formatInputNumber(el) { el.value = parseCleanNumber(el.value) > 0 ? formatNumber(parseCleanNumber(el.value)) : ''; }
 
-    function checkTimeValidation() {
-        let timeVal = document.getElementById('closingTimeInput').value;
-        let noteEl = document.getElementById('timeWarningNote');
-        if (!timeVal) return;
-
-        let [hour, minute] = timeVal.split(':').map(Number);
-        // Toko tutup jam 21.00 (9 malam). Jika ditarik >= 21:00, berikan catatan khusus.
-        if (hour >= 21) {
-            noteEl.innerText = "⚠️ Peringatan: Waktu penarikan di atas jam 21.00 (jam 9 malam). Berarti toko belum tutup penuh untuk hari tersebut.";
-        } else {
-            noteEl.innerText = "✅ Waktu penarikan valid (sebelum jam 9 malam / sebelum toko tutup).";
-        }
-    }
-
     function sendWhatsAppNotification(storeName, collectorName, amount, dateStr, typeLabel, startDate = "-", endDate = "-") {
         let message = `*PENGAMBILAN PERMEN*\n\n` +
                       `🏪 *Toko:* ${storeName}\n` +
@@ -432,30 +400,6 @@
         let encodedMessage = encodeURIComponent(message);
         let waUrl = `https://wa.me/${ownerPhone}?text=${encodedMessage}`;
         window.open(waUrl, '_blank');
-    }
-
-    function sendDirectWhatsAppPreview() {
-        let debit = parseCleanNumber(document.getElementById('debitInput').value);
-        let qris = parseCleanNumber(document.getElementById('qrisInput').value);
-        let physicalCash = parseCleanNumber(document.getElementById('physicalCashInput').value);
-        let parking = parseCleanNumber(document.getElementById('parkingInput').value);
-        let timeVal = document.getElementById('closingTimeInput').value;
-        let customDateVal = document.getElementById('closingDateInput').value;
-        let finalDateStr = customDateVal ? customDateVal : new Date().toLocaleDateString('id-ID');
-
-        let totalOmset = debit + qris + physicalCash;
-
-        let message = `*REKAP TUTUP BUKU & OPERASIONAL*%0A%0A` +
-                      `🏪 *Toko:* ${currentStore}%0A` +
-                      `📅 *Tanggal:* ${finalDateStr} (${timeVal})%0A%0A` +
-                      `• Permen Fisik: ${formatRp(physicalCash)}%0A` +
-                      `• Parkir: ${formatRp(parking)}%0A` +
-                      `• QRIS: ${formatRp(qris)}%0A` +
-                      `• Debit: ${formatRp(debit)}%0A` +
-                      `💰 *Total Omset Kasir:* ${formatRp(totalOmset)}%0A%0A` +
-                      `_Pesan otomatis dari Aplikasi Pendamping Toko AWW_`;
-
-        window.open(`https://api.whatsapp.com/send?phone=${ownerPhone}&text=${message}`, '_blank');
     }
 
     function addExpenseRow() {
@@ -528,7 +472,6 @@
         let qris = parseCleanNumber(document.getElementById('qrisInput').value);
         let physicalCash = parseCleanNumber(document.getElementById('physicalCashInput').value);
         let parking = parseCleanNumber(document.getElementById('parkingInput').value);
-        let timeVal = document.getElementById('closingTimeInput').value;
         
         let expenseParts = [];
         document.querySelectorAll('.expense-row').forEach(row => {
@@ -545,9 +488,10 @@
         let rawDate = isCollected ? document.getElementById('collectionDateInput').value : '';
         
         let collectionDateFormatted = '-';
+        let timeNow = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
         if (isCollected && rawDate) {
             let p = rawDate.split('-');
-            collectionDateFormatted = `${p[2]}/${p[1]}/${p[0]} ${timeVal}`;
+            collectionDateFormatted = `${p[2]}/${p[1]}/${p[0]} ${timeNow}`;
         }
 
         if (isCollected && !collectorName) {
@@ -581,7 +525,7 @@
             collectorName: collectorName || 'Pusat',
             collectionDate: collectionDateFormatted,
             date: finalDateStr,
-            time: timeVal,
+            time: timeNow,
             editHistory: []
         };
 
@@ -590,7 +534,7 @@
             alert('Laporan tutup buku berhasil disimpan!');
 
             if (isCollected) {
-                let fullDateTime = `${finalDateStr} ${timeVal}`;
+                let fullDateTime = `${finalDateStr} ${timeNow}`;
                 sendWhatsAppNotification(currentStore, collectorName, physicalCash, fullDateTime, 'Pengambilan Saat Tutup Buku', finalDateStr, finalDateStr);
             }
 
@@ -692,6 +636,7 @@
         document.getElementById('editQris').value = formatNumber(rec.qris || 0);
         document.getElementById('editDebit').value = formatNumber(rec.debit || 0);
         
+        // Load status permen ke select modal edit pusat
         document.getElementById('editStatusPermen').value = rec.isCollected ? "true" : "false";
         document.getElementById('editReasonInput').value = '';
 
