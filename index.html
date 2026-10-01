@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencatatan Tutup Buku Toko AWW</title>
+    <title>Pencatatan Tutup Buku & Operasional Toko</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; }
         body { background: #f4f6f8; margin: 0; padding: 15px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: none; }
         h2, h3 { margin-top: 0; color: #333; }
         .form-group { margin-bottom: 15px; text-align: left; }
         label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; font-size: 0.9rem; }
@@ -21,19 +21,38 @@
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.85rem; white-space: nowrap; }
         th { background: #f8f9fa; }
+        .login-card { max-width: 380px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>🏪 Pencatatan Tutup Buku & Pemasukan Toko</h2>
-    <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Catat hasil tutup buku harian lengkap dengan kategori pemasukan dan opsi waktu penarikan.</p>
+<!-- HALAMAN LOGIN PIN -->
+<div class="login-card" id="loginCard">
+    <h2>Login Akses Toko</h2>
+    <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Masukkan PIN Akses Anda</p>
+    <div class="form-group" style="text-align: left;">
+        <label>PIN Akses</label>
+        <input type="password" id="loginPinInput" placeholder="••••••" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.3rem;">
+    </div>
+    <button type="button" class="btn-primary" id="loginBtn">Masuk</button>
+    <div id="loginError" style="color: #c62828; font-size: 0.85rem; margin-top: 15px;"></div>
+</div>
 
-    <div class="info-box">
-        ℹ️️ <b>Aturan Waktu Penarikan:</b> Penarikan/pencatatan data harus dilakukan <b>sebelum jam 21.00 (Jam 9 Malam)</b> agar masuk ke rekapitulasi hari berjalan. Jika dicatat di atas jam 21.00 saat toko belum tutup, sistem akan memberi tanda peringatan.
+<!-- APLIKASI UTAMA -->
+<div class="container" id="appContainer">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+        <div>
+            <h2 style="margin: 0;">🏪 Pencatatan Tutup Buku & Pemasukan Toko</h2>
+            <p id="userStatusBanner" style="font-size: 0.85rem; color: #666; margin: 5px 0 0 0;">👤 Mengakses sebagai: -</p>
+        </div>
+        <button id="logoutBtn" style="background: #c62828; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;">🚪 Keluar</button>
     </div>
 
-    <form onsubmit="saveStoreClosing(event)">
+    <div class="info-box">
+        ℹ <b>Aturan Waktu Penarikan:</b> Pastikan penarikan/pencatatan data dilakukan <b>sebelum jam 21.00 (Jam 9 Malam)</b> agar masuk ke rekapitulasi hari berjalan. Jika diinput lewat jam 21.00 saat toko belum tutup penuh, sistem akan memberikan peringatan.
+    </div>
+
+    <form id="closingForm">
         <div class="form-group">
             <label>Tanggal Tutup Buku</label>
             <input type="date" id="closingDate" required>
@@ -49,31 +68,31 @@
 
         <div class="form-group">
             <label>Pemasukan QRIS (Rp)</label>
-            <input type="text" id="qrisInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)">
+            <input type="text" id="qrisInput" inputmode="numeric" placeholder="0">
         </div>
 
         <div class="form-group">
             <label>Pemasukan Debit (Rp)</label>
-            <input type="text" id="debitInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)">
+            <input type="text" id="debitInput" inputmode="numeric" placeholder="0">
         </div>
 
         <div class="form-group">
             <label>Pemasukan Tunai / Fisik (Rp)</label>
-            <input type="text" id="physicalCashInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)">
+            <input type="text" id="physicalCashInput" inputmode="numeric" placeholder="0">
         </div>
 
         <div class="form-group">
             <label>Pemasukan Permen (Rp)</label>
-            <input type="text" id="permenInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)">
+            <input type="text" id="permenInput" inputmode="numeric" placeholder="0">
         </div>
 
         <div class="form-group">
             <label>Pemasukan Parkir (Rp)</label>
-            <input type="text" id="parkirInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)">
+            <input type="text" id="parkirInput" inputmode="numeric" placeholder="0">
         </div>
 
         <button type="submit" class="btn-primary">💾 Simpan & Sinkronkan ke Pusat</button>
-        <button type="button" class="btn-whatsapp" onclick="sendWhatsAppMessage()">📤 Kirim Rekap via WhatsApp</button>
+        <button type="button" class="btn-whatsapp" id="whatsappBtn">📤 Kirim Rekap via WhatsApp</button>
     </form>
 
     <div class="table-responsive">
@@ -109,23 +128,76 @@
         measurementId: "G-X3Z7GVB39Z"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.database();
     let storeClosingsList = [];
+    const pinUserMap = { '123123': 'Mbak Ika', '945336': 'Owner' };
 
     document.addEventListener("DOMContentLoaded", function() {
-        let today = new Date();
-        document.getElementById('closingDate').value = today.toISOString().split('T')[0];
+        let loginBtn = document.getElementById('loginBtn');
+        let loginInput = document.getElementById('loginPinInput');
         
-        let hours = String(today.getHours()).padStart(2, '0');
-        let minutes = String(today.getMinutes()).padStart(2, '0');
-        document.getElementById('closingTime').value = `${hours}:${minutes}`;
-        
-        checkTimeValidation();
-        document.getElementById('closingTime').addEventListener('change', checkTimeValidation);
+        if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+        if (loginInput) {
+            loginInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') handleLogin();
+            });
+        }
 
-        loadClosingsFromFirebase();
+        let logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+
+        let today = new Date();
+        let dateEl = document.getElementById('closingDate');
+        let timeEl = document.getElementById('closingTime');
+
+        if (dateEl) dateEl.value = today.toISOString().split('T')[0];
+        if (timeEl) {
+            let hours = String(today.getHours()).padStart(2, '0');
+            let minutes = String(today.getMinutes()).padStart(2, '0');
+            timeEl.value = `${hours}:${minutes}`;
+            timeEl.addEventListener('change', checkTimeValidation);
+            checkTimeValidation();
+        }
+
+        let form = document.getElementById('closingForm');
+        if (form) form.addEventListener('submit', saveStoreClosing);
+
+        let waBtn = document.getElementById('whatsappBtn');
+        if (waBtn) waBtn.addEventListener('click', sendWhatsAppMessage);
+
+        ['qrisInput', 'debitInput', 'physicalCashInput', 'permenInput', 'parkirInput'].forEach(id => {
+            let el = document.getElementById(id);
+            if (el) el.addEventListener('input', function() { formatInputNumber(this); });
+        });
     });
+
+    function handleLogin() {
+        let pinInput = document.getElementById('loginPinInput');
+        let errorEl = document.getElementById('loginError');
+        if (!pinInput) return;
+        let pin = pinInput.value.trim();
+
+        if (pinUserMap.hasOwnProperty(pin)) {
+            let currentUser = pinUserMap[pin];
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            document.getElementById('userStatusBanner').innerText = `👤 Mengakses sebagai: ${currentUser}`;
+            loadClosingsFromFirebase();
+        } else {
+            if (errorEl) errorEl.innerText = 'PIN Akses Salah!';
+            pinInput.value = '';
+        }
+    }
+
+    function handleLogout() {
+        document.getElementById('loginCard').style.display = 'block';
+        document.getElementById('appContainer').style.display = 'none';
+        let pinInput = document.getElementById('loginPinInput');
+        if (pinInput) pinInput.value = '';
+    }
 
     function formatNumber(num) { return isNaN(num) ? '' : new Intl.NumberFormat('id-ID').format(num); }
     function parseCleanNumber(str) { return !str ? 0 : parseFloat(str.toString().replace(/\./g, '').replace(/,/g, '')) || 0; }
@@ -135,11 +207,11 @@
     function checkTimeValidation() {
         let timeVal = document.getElementById('closingTime').value;
         let warningEl = document.getElementById('timeWarningText');
-        if (!timeVal) return;
+        if (!timeVal || !warningEl) return;
 
         let [hour] = timeVal.split(':').map(Number);
         if (hour >= 21) {
-            warningEl.innerText = "⚠️ Peringatan: Waktu di atas jam 21.00 (9 malam). Toko belum tutup penuh, pastikan data sesuai.";
+            warningEl.innerText = "⚠️ Peringatan: Waktu di atas jam 21.00 (9 malam). Toko belum tutup penuh, periksa kembali waktu penarikan.";
         } else {
             warningEl.innerText = "";
         }
@@ -187,9 +259,9 @@
 
         db.ref('store_closings').set(storeClosingsList).then(() => {
             alert('Data tutup buku berhasil disimpan dan disinkronkan ke pusat!');
-            // Reset form angka
             ['qrisInput', 'debitInput', 'physicalCashInput', 'permenInput', 'parkirInput'].forEach(id => {
-                document.getElementById(id).value = '';
+                let el = document.getElementById(id);
+                if (el) el.value = '';
             });
         }).catch(err => {
             alert('Gagal menyimpan: ' + err.message);
