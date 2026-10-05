@@ -4,11 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Pusat & Tutup Buku</title>
-    <meta name="app-version" content="2.18.0-checkpoint-pusat-edit">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         * { box-sizing: border-box; font-family: Arial, sans-serif; }
@@ -18,281 +14,178 @@
         h2, h3 { margin-top: 0; color: #333; }
         .form-group { margin-bottom: 15px; text-align: left; }
         label { display: block; margin-bottom: 5px; color: #666; font-weight: bold; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.95rem; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.95rem; }
         
-        .expense-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
-        .expense-row input { flex: 2; }
-        .btn-add-row { background: #00796b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; }
-        .btn-del-row { background: #c62828; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
-
-        .highlight-box { background: #e8f5e9; border: 2px dashed #2e7d32; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        .pusat-box { background: #e3f2fd; border: 2px dashed #1565c0; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        
-        .bulk-input-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
-        .bulk-input-row input.bulk-date { flex: 1.5; }
-        .bulk-input-row input.bulk-cash { flex: 1.5; }
-        .bulk-input-row input.bulk-park { flex: 1.2; }
-        .bulk-input-row input.bulk-qris { flex: 1.2; }
-        .bulk-input-row input.bulk-debit { flex: 1.2; }
-        .bulk-input-row select.bulk-status { flex: 1.3; }
-
         .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
-        .btn-pusat { background: #1565c0; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
-        .btn-success { background: #1565c0; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; }
-        .btn-cancel { background: #9e9e9e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; }
-        .btn-edit { background: #e0f2f1; color: #00796b; border: 1px solid #b2dfdb; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; margin-right: 4px; }
-        .btn-delete { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        .btn-danger { background: #c62828; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
+        .btn-wa { background: #25d366; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; text-decoration: none; display: inline-block; text-align: center; }
+        .btn-edit { background: #1565c0; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; margin-right: 4px; }
         
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.85rem; white-space: nowrap; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.85rem; }
         th { background: #f8f9fa; }
-        .vertical-details { font-size: 0.8rem; line-height: 1.4; white-space: normal; min-width: 160px; }
+        
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .nav-tab { padding: 10px 20px; background: #e0e0e0; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+        .nav-tab.active { background: #1565c0; color: white; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
         .login-card { max-width: 380px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
         
         .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 450px; text-align: left; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 500px; text-align: left; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
 <!-- HALAMAN LOGIN PIN -->
 <div class="login-card" id="loginCard">
-    <h2>Login Toko AWW</h2>
+    <h2>Login Akses AWW</h2>
     <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Masukkan PIN Akses Toko Anda</p>
     <div class="form-group">
         <label>PIN Akses</label>
-        <input type="password" id="loginPinInput" placeholder="••••" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.3rem;" onkeydown="if(event.key==='Enter'){ handleStoreLogin(); }">
+        <input type="password" id="loginPinInput" placeholder="••••••" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.3rem;" onkeydown="if(event.key==='Enter'){ handleLogin(); }">
     </div>
-    <button type="button" class="btn-primary" onclick="handleStoreLogin()">Masuk</button>
+    <button type="button" class="btn-primary" onclick="handleLogin()">Masuk</button>
     <div id="loginError" style="color: #c62828; font-size: 0.85rem; margin-top: 15px;"></div>
 </div>
 
 <!-- APLIKASI UTAMA -->
 <div class="container" id="appContainer">
-    <div class="card" style="display: flex; justify-content: space-between; align-items: center; background: #2e7d32; color: white; flex-wrap: wrap; gap: 10px;" id="headerCard">
+    <div class="card" style="background: #1565c0; color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <div>
-            <h2 id="storeTitleHeader" style="margin: 0; color: white;">🏪 Toko AWW</h2>
-            <p id="storeSubHeader" style="font-size: 0.85rem; margin: 5px 0 0 0;">Aplikasi Pendamping Tutup Buku Harian</p>
+            <h2 style="margin: 0; color: white;">🏪 Aplikasi Tutup Buku Toko AWW</h2>
+            <p id="userStatusBanner" style="font-size: 0.85rem; margin: 5px 0 0 0; opacity: 0.9;">👤 Cabang: -</p>
         </div>
-        <button class="btn-cancel" onclick="handleStoreLogout()" style="width: auto; padding: 6px 12px; background: #c62828;">🚪 Keluar / Ganti Akun</button>
+        <button onclick="handleLogout()" style="background: #c62828; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;">🚪 Keluar</button>
     </div>
 
-    <!-- DASHBOARD PUSAT: INPUT MASSAL MULTI-TANGGAL -->
-    <div class="card" id="pusatDashboardCard" style="display: none;">
-        <h3 style="color: #1565c0;">⚙️ Panel Input Massal Multi-Tanggal (Pusat / Owner)</h3>
-        <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Pilih toko, lalu tambahkan baris tanggal sebanyak yang Anda butuhkan. Setelah semua terisi, klik <b>Konfirmasi & Simpan Semua</b> di bawah.</p>
-        
-        <div class="pusat-box">
-            <div class="form-group" style="max-width: 400px;">
-                <label style="color: #1565c0;">🏪 Pilih Toko Tujuan Susulan:</label>
-                <select id="pusatTargetStore" required>
-                    <option value="AWW Sambi">AWW Sambi</option>
-                    <option value="AWW Beji">AWW Beji</option>
-                    <option value="AWW Bandung">AWW Bandung</option>
-                    <option value="AWW Trenggalek">AWW Trenggalek</option>
-                    <option value="AWW Ponorogo">AWW Ponorogo</option>
-                </select>
-            </div>
+    <!-- TAB NAVIGASI -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchTab('tutupBukuTab')">📝 Form Tutup Buku Harian</button>
+        <button class="nav-tab" onclick="switchTab('riwayatTab')">📋 Riwayat Laporan Toko</button>
+        <button class="nav-tab" id="pusatTabBtn" onclick="switchTab('pusatTab')" style="display: none;">🏢 Panel Pusat (Rekap & Ambil Permen)</button>
+    </div>
 
-            <div style="font-size: 0.85rem; color: #333; font-weight: bold; margin-bottom: 5px;">Daftar Tanggal & Data Susulan:</div>
-            
-            <div style="display: flex; font-size: 0.75rem; color: #555; font-weight: bold; margin-bottom: 4px; gap: 8px;">
-                <span style="flex: 1.5;">Tanggal</span>
-                <span style="flex: 1.5;">Permen Fisik (Rp)</span>
-                <span style="flex: 1.2;">Parkir (Rp)</span>
-                <span style="flex: 1.2;">QRIS (Rp)</span>
-                <span style="flex: 1.2;">Debit (Rp)</span>
-                <span style="flex: 1.3;">Status Permen</span>
-                <span style="width: 35px;"></span>
-            </div>
-
-            <div id="bulkRowsContainer">
-                <div class="bulk-input-row">
-                    <input type="date" class="bulk-date" required>
-                    <input type="text" class="bulk-cash" inputmode="numeric" placeholder="Permen Fisik" oninput="formatInputNumber(this)" required>
-                    <input type="text" class="bulk-park" inputmode="numeric" placeholder="Parkir" oninput="formatInputNumber(this)" required>
-                    <input type="text" class="bulk-qris" inputmode="numeric" placeholder="QRIS" oninput="formatInputNumber(this)" required>
-                    <input type="text" class="bulk-debit" inputmode="numeric" placeholder="Debit" oninput="formatInputNumber(this)" required>
-                    <select class="bulk-status">
-                        <option value="true">🟢 Diambil</option>
-                        <option value="false">🔴 Belum Diambil</option>
-                    </select>
-                    <button type="button" class="btn-del-row" onclick="removeBulkRow(this)" style="display:none;">✕</button>
+    <!-- TAB 1: TUTUP BUKU HARIAN -->
+    <div id="tutupBukuTab" class="tab-content active">
+        <div class="card">
+            <h3>Form Tutup Buku Toko</h3>
+            <form onsubmit="saveTutupBuku(event)">
+                <div class="form-group">
+                    <label>Tanggal Tutup Buku</label>
+                    <input type="date" id="tbDate" required>
                 </div>
-            </div>
+                <div class="form-group">
+                    <label>Total Permen Fisik / Tunai Kasir (Rp)</label>
+                    <input type="text" id="tbPermen" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
+                </div>
+                <div class="form-group">
+                    <label>Total Parkir (Rp)</label>
+                    <input type="text" id="tbParkir" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
+                </div>
+                <button type="submit" class="btn-primary">Kirim Laporan Tutup Buku</button>
+            </form>
+        </div>
+    </div>
 
-            <button type="button" class="btn-add-row" onclick="addBulkRow()" style="background:#1565c0; margin-top: 10px;">+ Tambah Baris Tanggal Lain</button>
+    <!-- TAB 2: RIWAYAT LAPORAN -->
+    <div id="riwayatTab" class="tab-content">
+        <div class="card">
+            <h3>Riwayat Laporan Tutup Buku Toko Ini</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Permen Fisik / Sisa</th>
+                            <th>Status Pengambilan</th>
+                            <th>Parkir</th>
+                            <th>Aksi WhatsApp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="riwayatTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: #777;">Memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: PANEL PUSAT -->
+    <div id="pusatTab" class="tab-content">
+        <div class="card" style="border-top: 4px solid #2e7d32;">
+            <h3>🍬 Ambil Masal Permen Fisik Belum Diambil</h3>
+            <p style="font-size: 0.85rem; color: #555; margin-bottom: 15px;">Jika hari ini pusat mengambil semua permen yang tertinggal di toko ini, klik tombol di bawah ini.</p>
+            <button type="button" class="btn-primary" onclick="openAmbilMasalModal()" style="background: #1565c0;">📦 Ambil Semua Permen Tertinggal di Toko Ini</button>
         </div>
 
-        <button type="button" class="btn-pusat" onclick="confirmAndSaveBulkPusat()">🚀 Konfirmasi & Simpan Semua Data Massal</button>
-    </div>
-
-    <!-- FORM TUTUP BUKU HARIAN (UNTUK TOKO) -->
-    <div class="card" id="storeClosingFormCard">
-        <h3>📝 Form Tutup Buku Harian</h3>
-        <form onsubmit="saveStoreClosing(event)">
-            <div class="form-group">
-                <label>Tanggal Laporan (Opsional)</label>
-                <input type="date" id="closingDateInput">
-                <small style="color: #666; font-size: 0.75rem;">Biarkan kosong jika ingin menggunakan tanggal hari ini secara otomatis.</small>
+        <div class="card">
+            <h3>📊 Rekapitulasi Status Permen Toko</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Nominal Permen</th>
+                            <th>Status</th>
+                            <th>Detail Pengambilan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pusatTableBody">
+                        <tr><td colspan="4" style="text-align: center; color: #777;">Memuat data pusat...</td></tr>
+                    </tbody>
+                </table>
             </div>
-
-            <div class="form-group">
-                <label>Total Kartu Debit (Rp)</label>
-                <input type="text" id="debitInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
-            </div>
-
-            <div class="form-group">
-                <label>Total QRIS (Rp)</label>
-                <input type="text" id="qrisInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
-            </div>
-
-            <div class="form-group">
-                <label>Total Permen Fisik / Tunai Kasir (Rp)</label>
-                <input type="text" id="physicalCashInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
-            </div>
-
-            <div class="form-group">
-                <label>Total Parkir (Rp)</label>
-                <input type="text" id="parkingInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
-            </div>
-
-            <!-- BAGIAN RINCIAN PENGELUARAN DINAMIS -->
-            <div class="form-group">
-                <label>Rincian Pengeluaran Toko</label>
-                <div id="expenseRowsContainer">
-                    <div class="expense-row">
-                        <input type="text" class="exp-name" placeholder="Nama Keperluan (Contoh: Infak / Parkir)">
-                        <input type="text" class="exp-cost" inputmode="numeric" placeholder="Nominal (Rp)" oninput="formatInputNumber(this)">
-                        <button type="button" class="btn-del-row" onclick="removeExpenseRow(this)" style="display:none;">✕</button>
-                    </div>
-                </div>
-                <button type="button" class="btn-add-row" onclick="addExpenseRow()">+ Tambah Baris Pengeluaran</button>
-            </div>
-
-            <div class="highlight-box">
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label style="color: #1b5e20;">🔒 STATUS PENGAMBILAN PERMEN FISIK:</label>
-                    <select id="isCollectedSelect" onchange="toggleCollectorSection()" required>
-                        <option value="false">🔴 Belum Diambil (Masih di Toko)</option>
-                        <option value="true">🟢 Langsung Diambil Saat Tutup Buku</option>
-                    </select>
-                </div>
-                
-                <div id="collectorSection" style="display: none;">
-                    <div class="form-group">
-                        <label style="color: #1b5e20;">👤 Nama Pengambil:</label>
-                        <input type="text" id="collectorNameInput" placeholder="Contoh: Budi (Bagian Ambil)">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="color: #1b5e20;">📅 Tanggal Pengambilan:</label>
-                        <input type="date" id="collectionDateInput">
-                    </div>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-primary">Kirim Laporan Tutup Buku</button>
-        </form>
-    </div>
-
-    <!-- FITUR AMBIL MASAL OTOMATIS TANGGAL SEBELUMNYA -->
-    <div class="card" id="bulkCollectCard">
-        <h3>📦 Ambil Masal Permen Fisik Belum Diambil</h3>
-        <p style="font-size: 0.85rem; color: #666; margin-bottom: 12px;">Jika hari ini pusat mengambil semua permen yang tertinggal di toko ini, klik tombol di bawah ini.</p>
-        <button type="button" class="btn-success" onclick="openBulkCollectModal()">📦 Ambil Semua Permen Tertinggal di Toko Ini</button>
-    </div>
-
-    <!-- RIWAYAT LAPORAN -->
-    <div class="card">
-        <h3 id="historyTitleLabel">📋 Riwayat Laporan Toko Ini</h3>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th id="thActionHeader" style="display:none;">Aksi Master</th>
-                        <th>Toko</th>
-                        <th>Tanggal & Waktu</th>
-                        <th>Permen Fisik</th>
-                        <th>Parkir</th>
-                        <th>QRIS</th>
-                        <th>Debit</th>
-                        <th>Pengeluaran Toko</th>
-                        <th>Status Ambil Permen</th>
-                    </tr>
-                </thead>
-                <tbody id="historyTableBody">
-                    <tr><td colspan="9" style="text-align: center; color: #777;">Memuat data...</td></tr>
-                </tbody>
-            </table>
         </div>
     </div>
 </div>
 
-<!-- MODAL AMBIL MASAL -->
-<div class="modal" id="bulkModal">
-    <div class="modal-content" style="width: 350px; text-align: center;">
-        <h3>Konfirmasi Ambil Masal</h3>
-        <p style="font-size:0.85rem; color:#666;">Semua sisa permen yang belum diambil di toko ini akan ditandai sudah diambil.</p>
-        <div class="form-group"><label>Nama Pengambil / Petugas</label><input type="text" id="bulkCollectorName" placeholder="Contoh: Budi"></div>
-        <div class="form-group"><label>Tanggal Penarikan</label><input type="date" id="bulkCollectionDate"></div>
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <button class="btn-cancel" onclick="document.getElementById('bulkModal').style.display='none'">Batal</button>
-            <button class="btn-primary" onclick="confirmBulkCollection()" style="background:#1565c0;">Proses Ambil</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL EDIT LAPORAN -->
-<div class="modal" id="editModal">
+<!-- MODAL KONFIRMASI AMBIL MASAL -->
+<div class="modal" id="modalAmbilMasal">
     <div class="modal-content">
-        <h3>✏️ Edit Laporan Tutup Buku (Pusat)</h3>
-        <input type="hidden" id="editRecordId">
+        <h3 style="color: #1565c0;">Konfirmasi Ambil Masal</h3>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Semua sisa permen yang belum diambil di toko ini akan ditandai sudah diambil.</p>
         
         <div class="form-group">
-            <label>Total Permen Fisik (Rp)</label>
-            <input type="text" id="editPhysicalCash" inputmode="numeric" oninput="formatInputNumber(this)" required>
+            <label>Nama Pengambil / Petugas</label>
+            <input type="text" id="ambilMasalPengambilInput" placeholder="Contoh: Budi">
         </div>
+        
         <div class="form-group">
-            <label>Total Parkir (Rp)</label>
-            <input type="text" id="editParking" inputmode="numeric" oninput="formatInputNumber(this)" required>
-        </div>
-        <div class="form-group">
-            <label>Total QRIS (Rp)</label>
-            <input type="text" id="editQris" inputmode="numeric" oninput="formatInputNumber(this)" required>
-        </div>
-        <div class="form-group">
-            <label>Total Kartu Debit (Rp)</label>
-            <input type="text" id="editDebit" inputmode="numeric" oninput="formatInputNumber(this)" required>
+            <label>Tanggal Penarikan Fisik</label>
+            <input type="date" id="ambilMasalDateInput">
         </div>
 
-        <!-- OPSI EDIT STATUS PENGAMBILAN PERMEN -->
-        <div class="form-group" style="background: #e8f5e9; padding: 12px; border-radius: 6px; border: 1px solid #c8e6c9;">
-            <label style="color: #1b5e20;">🍬 Ralat Status Pengambilan Permen:</label>
-            <select id="editStatusPermen" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; background: #fff;">
-                <option value="false">❌ Belum Diambil (Masih di Toko)</option>
-                <option value="true">🟢 Sudah Diambil</option>
-            </select>
+        <div class="form-group">
+            <label>Waktu Penarikan (Jam:Menit)</label>
+            <input type="time" id="ambilMasalTimeInput">
+            <small style="color: #666; display: block; margin-top: 3px;">Biarkan kosong untuk otomatis mengisi waktu terkini.</small>
         </div>
 
-        <div class="form-group" style="background: #fff3e0; padding: 10px; border-radius: 4px; border: 1px solid #ffe0b2;">
-            <label style="color: #e65100;">⚠️ Alasan Mengedit Laporan (Wajib):</label>
-            <input type="text" id="editReasonInput" placeholder="Contoh: Ralat status permen tanggal tersebut ternyata belum diambil" required style="background: #fff;">
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn-primary" onclick="prosesAmbilMasal()" style="background: #1565c0;">Proses Ambil</button>
+            <button class="btn-danger" onclick="document.getElementById('modalAmbilMasal').style.display='none'" style="background: #9e9e9e; flex: 1;">Batal</button>
         </div>
+    </div>
+</div>
 
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="btn-cancel" onclick="document.getElementById('editModal').style.display='none'">Batal</button>
-            <button class="btn-primary" onclick="submitEditRecord()" style="background:#00796b;">Simpan Perubahan</button>
+<!-- MODAL ANTREAN WHATSAPP MASAL (MENGATASI POPUP BLOCKER) -->
+<div class="modal" id="modalWaiQueue">
+    <div class="modal-content" style="text-align: center;">
+        <h3 style="color: #2e7d32;">📱 Pengiriman Pesan WhatsApp</h3>
+        <p id="waQueueStatusText" style="font-size: 0.95rem; margin: 15px 0;">Menyiapkan pesan...</p>
+        <div id="waQueueActionBox" style="margin-top: 20px;">
+            <button type="button" class="btn-primary" id="btnNextWaQueue" onclick="proceedNextWaQueue()" style="background: #25d366; display: none;">Lanjut Kirim WhatsApp Berikutnya ➔</button>
+            <button type="button" class="btn-danger" onclick="document.getElementById('modalWaiQueue').style.display='none'" style="margin-top: 10px; background: #555;">Tutup</button>
         </div>
     </div>
 </div>
 
 <script>
-    // ----------------------------------------------------
-    // NOMOR WHATSAPP OWNER (CHECKPOINT)
-    // ----------------------------------------------------
-    const ownerPhone = "6282140784095";
-
     const firebaseConfig = {
         apiKey: "AIzaSyCVJcVrRg4w9xY__bvf_4Lfk0ENQ5X5F8E",
         authDomain: "pencatatan-keuangan-brankas.firebaseapp.com",
@@ -307,79 +200,55 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let allClosings = [];
-    let currentStore = null;
-    let isPusatMode = false;
-    
-    const pinToStoreMap = {
-        '64176': 'AWW Sambi',
-        '66233': 'AWW Beji',
-        '66274': 'AWW Bandung',
-        '66313': 'AWW Trenggalek',
-        '63416': 'AWW Ponorogo',
-        '123123': 'PUSAT' // Master PIN
+    let currentUser = "";
+    let currentStore = "";
+    let allReports = [];
+    let pendingWaQueue = [];
+
+    const pinStoreMap = {
+        '111111': { name: 'Toko Ponorogo 1', wa: '6281234567890' },
+        '222222': { name: 'Toko Kediri 1', wa: '6289876543210' },
+        '945336': { name: 'Pusat (Owner)', wa: '6281111111111' }
     };
 
-    function handleStoreLogin() {
+    function handleLogin() {
         let pin = document.getElementById('loginPinInput').value.trim();
-
-        if (pinToStoreMap.hasOwnProperty(pin)) {
-            let mappedVal = pinToStoreMap[pin];
+        if (pinStoreMap.hasOwnProperty(pin)) {
+            currentUser = pinStoreMap[pin];
+            currentStore = currentUser.name;
             document.getElementById('loginCard').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
+            document.getElementById('userStatusBanner').innerText = `👤 Cabang: ${currentStore}`;
             
-            let todayStr = new Date().toISOString().split('T')[0];
-            document.getElementById('collectionDateInput').value = todayStr;
-            document.getElementById('closingDateInput').value = todayStr;
-
-            if (mappedVal === 'PUSAT') {
-                isPusatMode = true;
-                currentStore = 'PUSAT';
-                document.getElementById('headerCard').style.background = '#1565c0';
-                document.getElementById('storeTitleHeader', '👑 DASHBOARD PUSAT (OWNER)');
-                document.getElementById('storeTitleHeader').innerText = `👑 DASHBOARD PUSAT (OWNER)`;
-                document.getElementById('storeSubHeader').innerText = `Akses Seluruh Toko & Input Massal Multi-Tanggal`;
-                
-                document.getElementById('pusatDashboardCard').style.display = 'block';
-                document.getElementById('storeClosingFormCard').style.display = 'none';
-                document.getElementById('bulkCollectCard').style.display = 'none';
-                document.getElementById('historyTitleLabel').innerText = `📋 Riwayat Laporan Seluruh Toko`;
-                document.getElementById('thActionHeader').style.display = 'table-cell';
+            let pusatBtn = document.getElementById('pusatTabBtn');
+            if (pin === '945336' || currentStore.includes('Pusat')) {
+                pusatBtn.style.display = 'inline-block';
             } else {
-                isPusatMode = false;
-                currentStore = mappedVal;
-                document.getElementById('headerCard').style.background = '#2e7d32';
-                document.getElementById('storeTitleHeader').innerText = `🏪 ${currentStore}`;
-                document.getElementById('storeSubHeader').innerText = `Aplikasi Pendamping Tutup Buku Harian`;
-                
-                document.getElementById('pusatDashboardCard').style.display = 'none';
-                document.getElementById('storeClosingFormCard').style.display = 'block';
-                document.getElementById('bulkCollectCard').style.display = 'block';
-                document.getElementById('historyTitleLabel').innerText = `📋 Riwayat Laporan Toko Ini`;
-                document.getElementById('thActionHeader').style.display = 'none';
+                pusatBtn.style.display = 'none';
             }
-            
-            loadData();
+
+            document.getElementById('tbDate').value = new Date().toISOString().split('T')[0];
+            loadReportsFromFirebase();
         } else {
             document.getElementById('loginError').innerText = 'PIN Akses Salah!';
             document.getElementById('loginPinInput').value = '';
         }
     }
 
-    function handleStoreLogout() {
-        currentStore = null;
-        isPusatMode = false;
+    function handleLogout() {
+        currentUser = "";
+        currentStore = "";
         document.getElementById('loginCard').style.display = 'block';
         document.getElementById('appContainer').style.display = 'none';
         document.getElementById('loginPinInput').value = '';
         document.getElementById('loginError').innerText = '';
     }
 
-    function loadData() {
-        db.ref('store_closings').on('value', snapshot => {
-            allClosings = snapshot.val() || [];
-            renderHistory();
-        });
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
     }
 
     function formatNumber(num) { return isNaN(num) ? '' : new Intl.NumberFormat('id-ID').format(num); }
@@ -387,442 +256,187 @@
     function formatRp(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num); }
     function formatInputNumber(el) { el.value = parseCleanNumber(el.value) > 0 ? formatNumber(parseCleanNumber(el.value)) : ''; }
 
-    function sendWhatsAppNotification(storeName, collectorName, amount, dateStr, typeLabel, startDate = "-", endDate = "-") {
-        let message = `*PENGAMBILAN PERMEN*\n\n` +
-                      `🏪 *Toko:* ${storeName}\n` +
-                      `📦 *Jenis:* ${typeLabel}\n` +
-                      `👤 *Pengambil:* ${collectorName}\n` +
-                      `💰 *Nominal Permen:* ${formatRp(amount)}\n` +
-                      `📅 *Periode Permen:* ${startDate} s/d ${endDate}\n` +
-                      `⏰ *Waktu Ambil:* ${dateStr}\n\n` +
-                      `_Pesan otomatis dari Aplikasi Tutup Buku AWW_`;
-
-        let encodedMessage = encodeURIComponent(message);
-        let waUrl = `https://wa.me/${ownerPhone}?text=${encodedMessage}`;
-        window.open(waUrl, '_blank');
-    }
-
-    function addExpenseRow() {
-        let container = document.getElementById('expenseRowsContainer');
-        let div = document.createElement('div');
-        div.className = 'expense-row';
-        div.innerHTML = `
-            <input type="text" class="exp-name" placeholder="Nama Keperluan">
-            <input type="text" class="exp-cost" inputmode="numeric" placeholder="Nominal (Rp)" oninput="formatInputNumber(this)">
-            <button type="button" class="btn-del-row" onclick="removeExpenseRow(this)">✕</button>
-        `;
-        container.appendChild(div);
-        updateDeleteButtons();
-    }
-
-    function removeExpenseRow(btn) {
-        btn.parentElement.remove();
-        updateDeleteButtons();
-    }
-
-    function updateDeleteButtons() {
-        let rows = document.querySelectorAll('.expense-row');
-        rows.forEach((r, idx) => {
-            let delBtn = r.querySelector('.btn-del-row');
-            delBtn.style.display = rows.length > 1 ? 'block' : 'none';
+    function loadReportsFromFirebase() {
+        db.ref('tutup_buku_reports').on('value', snapshot => {
+            let raw = snapshot.val();
+            if (Array.isArray(raw)) {
+                allReports = raw.filter(i => i !== null && i !== undefined);
+            } else if (raw && typeof raw === 'object') {
+                allReports = Object.values(raw);
+            } else {
+                allReports = [];
+            }
+            renderReports();
         });
     }
 
-    function toggleCollectorSection() {
-        let val = document.getElementById('isCollectedSelect').value;
-        document.getElementById('collectorSection').style.display = val === 'true' ? 'block' : 'none';
-    }
-
-    function addBulkRow() {
-        let container = document.getElementById('bulkRowsContainer');
-        let div = document.createElement('div');
-        div.className = 'bulk-input-row';
-        div.innerHTML = `
-            <input type="date" class="bulk-date" required>
-            <input type="text" class="bulk-cash" inputmode="numeric" placeholder="Permen Fisik" oninput="formatInputNumber(this)" required>
-            <input type="text" class="bulk-park" inputmode="numeric" placeholder="Parkir" oninput="formatInputNumber(this)" required>
-            <input type="text" class="bulk-qris" inputmode="numeric" placeholder="QRIS" oninput="formatInputNumber(this)" required>
-            <input type="text" class="bulk-debit" inputmode="numeric" placeholder="Debit" oninput="formatInputNumber(this)" required>
-            <select class="bulk-status">
-                <option value="true">🟢 Diambil</option>
-                <option value="false">🔴 Belum Diambil</option>
-            </select>
-            <button type="button" class="btn-del-row" onclick="removeBulkRow(this)" style="display:none;">✕</button>
-        `;
-        container.appendChild(div);
-        updateBulkDeleteButtons();
-    }
-
-    function removeBulkRow(btn) {
-        btn.parentElement.remove();
-        updateBulkDeleteButtons();
-    }
-
-    function updateBulkDeleteButtons() {
-        let rows = document.querySelectorAll('.bulk-input-row');
-        rows.forEach(r => {
-            let delBtn = r.querySelector('.btn-del-row');
-            delBtn.style.display = rows.length > 1 ? 'block' : 'none';
-        });
-    }
-
-    function saveStoreClosing(e) {
+    function saveTutupBuku(e) {
         e.preventDefault();
-        let debit = parseCleanNumber(document.getElementById('debitInput').value);
-        let qris = parseCleanNumber(document.getElementById('qrisInput').value);
-        let physicalCash = parseCleanNumber(document.getElementById('physicalCashInput').value);
-        let parking = parseCleanNumber(document.getElementById('parkingInput').value);
-        
-        let expenseParts = [];
-        document.querySelectorAll('.expense-row').forEach(row => {
-            let name = row.querySelector('.exp-name').value.trim();
-            let cost = parseCleanNumber(row.querySelector('.exp-cost').value);
-            if (name && cost > 0) {
-                expenseParts.push(`${name} (${formatRp(cost)})`);
-            }
-        });
-        let expenseDesc = expenseParts.length > 0 ? expenseParts.join(', ') : '-';
-        
-        let isCollected = document.getElementById('isCollectedSelect').value === 'true';
-        let collectorName = isCollected ? document.getElementById('collectorNameInput').value.trim() : '';
-        let rawDate = isCollected ? document.getElementById('collectionDateInput').value : '';
-        
-        let collectionDateFormatted = '-';
-        let timeNow = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-        if (isCollected && rawDate) {
-            let p = rawDate.split('-');
-            collectionDateFormatted = `${p[2]}/${p[1]}/${p[0]} ${timeNow}`;
-        }
+        let date = document.getElementById('tbDate').value;
+        let permen = parseCleanNumber(document.getElementById('tbPermen').value);
+        let parkir = parseCleanNumber(document.getElementById('tbParkir').value);
 
-        if (isCollected && !collectorName) {
-            alert('Nama pengambil wajib diisi jika permen langsung diambil!');
+        if (!date || permen < 0 || parkir < 0) {
+            alert('Mohon lengkapi data dengan benar!');
             return;
         }
 
-        let customDateVal = document.getElementById('closingDateInput').value;
-        let finalDateStr = '';
-        let now = new Date();
-        
-        if (customDateVal) {
-            let p = customDateVal.split('-');
-            finalDateStr = `${p[2]}/${p[1]}/${p[0]}`;
-        } else {
-            finalDateStr = now.toLocaleDateString('id-ID');
-        }
-
-        let computerOmset = debit + qris + physicalCash;
-
-        let newRecord = {
+        let newReport = {
             id: Date.now(),
-            storePoint: currentStore,
-            debit,
-            qris,
-            physicalCash,
-            parking,
-            computerOmset,
-            expenseDesc,
-            isCollected,
-            collectorName: collectorName || 'Pusat',
-            collectionDate: collectionDateFormatted,
-            date: finalDateStr,
-            time: timeNow,
-            editHistory: []
+            store: currentStore,
+            date,
+            permen,
+            parkir,
+            statusAmbil: 'Belum Diambil',
+            ambilInfo: null
         };
 
-        allClosings.push(newRecord);
-        db.ref('store_closings').set(allClosings).then(() => {
+        allReports.push(newReport);
+        db.ref('tutup_buku_reports').set(allReports).then(() => {
             alert('Laporan tutup buku berhasil disimpan!');
-
-            if (isCollected) {
-                let fullDateTime = `${finalDateStr} ${timeNow}`;
-                sendWhatsAppNotification(currentStore, collectorName, physicalCash, fullDateTime, 'Pengambilan Saat Tutup Buku', finalDateStr, finalDateStr);
-            }
-
-            document.getElementById('debitInput').value = '';
-            document.getElementById('qrisInput').value = '';
-            document.getElementById('physicalCashInput').value = '';
-            document.getElementById('parkingInput').value = '';
-            document.getElementById('closingDateInput').value = new Date().toISOString().split('T')[0];
-            
-            document.getElementById('expenseRowsContainer').innerHTML = `
-                <div class="expense-row">
-                    <input type="text" class="exp-name" placeholder="Nama Keperluan (Contoh: Infak / Parkir)">
-                    <input type="text" class="exp-cost" inputmode="numeric" placeholder="Nominal (Rp)" oninput="formatInputNumber(this)">
-                    <button type="button" class="btn-del-row" onclick="removeExpenseRow(this)" style="display:none;">✕</button>
-                </div>
-            `;
-            document.getElementById('isCollectedSelect').value = 'false';
-            toggleCollectorSection();
+            document.getElementById('tbPermen').value = '';
+            document.getElementById('tbParkir').value = '';
+            document.getElementById('tbDate').value = new Date().toISOString().split('T')[0];
         });
     }
 
-    function confirmAndSaveBulkPusat() {
-        let targetStore = document.getElementById('pusatTargetStore').value;
-        let rows = document.querySelectorAll('.bulk-input-row');
-        let newRecords = [];
-        let now = new Date();
-        let timeNow = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    function openAmbilMasalModal() {
+        document.getElementById('ambilMasalPengambilInput').value = '';
+        document.getElementById('ambilMasalDateInput').value = new Date().toISOString().split('T')[0];
+        document.getElementById('ambilMasalTimeInput').value = '';
+        document.getElementById('modalAmbilMasal').style.display = 'flex';
+    }
 
-        let isValid = true;
-        rows.forEach(row => {
-            let rawDate = row.querySelector('.bulk-date').value;
-            let physicalCash = parseCleanNumber(row.querySelector('.bulk-cash').value);
-            let parking = parseCleanNumber(row.querySelector('.bulk-park').value);
-            let qris = parseCleanNumber(row.querySelector('.bulk-qris').value);
-            let debit = parseCleanNumber(row.querySelector('.bulk-debit').value);
-            let isCollected = row.querySelector('.bulk-status').value === 'true';
+    function prosesAmbilMasal() {
+        let pengambil = document.getElementById('ambilMasalPengambilInput').value.trim();
+        let tanggalAmbil = document.getElementById('ambilMasalDateInput').value;
+        let waktuAmbil = document.getElementById('ambilMasalTimeInput').value.trim();
 
-            if (!rawDate) { isValid = false; return; }
-
-            let p = rawDate.split('-');
-            let finalDateStr = `${p[2]}/${p[1]}/${p[0]}`;
-            let collectionDateFormatted = isCollected ? `${p[2]}/${p[1]}/${p[0]} ${timeNow}` : '-';
-            let collectorName = isCollected ? 'Pusat (Input Massal)' : '-';
-            let computerOmset = debit + qris + physicalCash;
-
-            newRecords.push({
-                id: Date.now() + Math.random(),
-                storePoint: targetStore,
-                debit,
-                qris,
-                physicalCash,
-                parking,
-                computerOmset,
-                expenseDesc: '-',
-                isCollected,
-                collectorName,
-                collectionDate: collectionDateFormatted,
-                date: finalDateStr,
-                time: timeNow,
-                editHistory: []
-            });
-        });
-
-        if (!isValid || newRecords.length === 0) {
-            alert('Mohon lengkapi tanggal pada semua baris input massal!');
+        if (!pengambil) {
+            alert('Nama pengambil atau petugas wajib diisi!');
+            return;
+        }
+        if (!tanggalAmbil) {
+            alert('Tanggal penarikan wajib diisi!');
             return;
         }
 
-        if (confirm(`Simpan ${newRecords.length} data laporan susulan untuk ${targetStore}?`)) {
-            newRecords.forEach(rec => allClosings.push(rec));
-
-            db.ref('store_closings').set(allClosings).then(() => {
-                alert(`Berhasil! ${newRecords.length} laporan untuk ${targetStore} berhasil tersimpan sekaligus.`);
-                document.getElementById('bulkRowsContainer').innerHTML = `
-                    <div class="bulk-input-row">
-                        <input type="date" class="bulk-date" required>
-                        <input type="text" class="bulk-cash" inputmode="numeric" placeholder="Permen Fisik" oninput="formatInputNumber(this)" required>
-                        <input type="text" class="bulk-park" inputmode="numeric" placeholder="Parkir" oninput="formatInputNumber(this)" required>
-                        <input type="text" class="bulk-qris" inputmode="numeric" placeholder="QRIS" oninput="formatInputNumber(this)" required>
-                        <input type="text" class="bulk-debit" inputmode="numeric" placeholder="Debit" oninput="formatInputNumber(this)" required>
-                        <select class="bulk-status">
-                            <option value="true">🟢 Diambil</option>
-                            <option value="false">🔴 Belum Diambil</option>
-                        </select>
-                        <button type="button" class="btn-del-row" onclick="removeBulkRow(this)" style="display:none;">✕</button>
-                    </div>
-                `;
-            });
-        }
-    }
-
-    function openEditModal(recordId) {
-        let rec = allClosings.find(i => i.id === recordId);
-        if (!rec) return;
-
-        document.getElementById('editRecordId').value = rec.id;
-        document.getElementById('editPhysicalCash').value = formatNumber(rec.physicalCash || 0);
-        document.getElementById('editParking').value = formatNumber(rec.parking || 0);
-        document.getElementById('editQris').value = formatNumber(rec.qris || 0);
-        document.getElementById('editDebit').value = formatNumber(rec.debit || 0);
-        
-        // Load status permen ke select modal edit pusat
-        document.getElementById('editStatusPermen').value = rec.isCollected ? "true" : "false";
-        document.getElementById('editReasonInput').value = '';
-
-        document.getElementById('editModal').style.display = 'flex';
-    }
-
-    function submitEditRecord() {
-        let recordId = parseFloat(document.getElementById('editRecordId').value);
-        let newCash = parseCleanNumber(document.getElementById('editPhysicalCash').value);
-        let newPark = parseCleanNumber(document.getElementById('editParking').value);
-        let newQris = parseCleanNumber(document.getElementById('editQris').value);
-        let newDebit = parseCleanNumber(document.getElementById('editDebit').value);
-        
-        let isCollectedVal = document.getElementById('editStatusPermen').value === "true";
-        let reason = document.getElementById('editReasonInput').value.trim();
-
-        if (!reason) {
-            alert('Alasan mengedit laporan wajib diisi!');
-            return;
+        if (!waktuAmbil) {
+            let now = new Date();
+            let hours = String(now.getHours()).padStart(2, '0');
+            let minutes = String(now.getMinutes()).padStart(2, '0');
+            waktuAmbil = `${hours}:${minutes}`;
         }
 
-        let rec = allClosings.find(i => i.id === recordId);
-        if (!rec) return;
-
-        let beforeSummary = `Permen: ${formatRp(rec.physicalCash)}, Parkir: ${formatRp(rec.parking)}, QRIS: ${formatRp(rec.qris)}, Debit: ${formatRp(rec.debit)}, Status: ${rec.isCollected ? 'Sudah Diambil' : 'Belum Diambil'}`;
-        let afterSummary = `Permen: ${formatRp(newCash)}, Parkir: ${formatRp(newPark)}, QRIS: ${formatRp(newQris)}, Debit: ${formatRp(newDebit)}, Status: ${isCollectedVal ? 'Sudah Diambil' : 'Belum Diambil'}`;
-
-        let now = new Date();
-        let editTimestamp = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
-        
-        let editLog = {
-            timestamp: editTimestamp,
-            reason: reason,
-            before: beforeSummary,
-            after: afterSummary
-        };
-
-        allClosings = allClosings.map(item => {
-            if (item.id === recordId) {
-                let history = item.editHistory || [];
-                history.push(editLog);
-                let computerOmset = newDebit + newQris + newCash;
+        let updatedCount = 0;
+        allReports = allReports.map(item => {
+            if (item.store === currentStore && item.statusAmbil === 'Belum Diambil') {
+                updatedCount++;
                 return {
                     ...item,
-                    physicalCash: newCash,
-                    parking: newPark,
-                    qris: newQris,
-                    debit: newDebit,
-                    computerOmset,
-                    isCollected: isCollectedVal,
-                    collectorName: isCollectedVal ? (item.collectorName || 'Pusat (Ralat Owner)') : 'Pusat',
-                    collectionDate: isCollectedVal ? (item.collectionDate !== '-' ? item.collectionDate : editTimestamp) : '-',
-                    editHistory: history
+                    statusAmbil: 'Sudah Diambil',
+                    ambilInfo: {
+                        pengambil,
+                        tanggal: tanggalAmbil,
+                        waktu: waktuAmbil
+                    }
                 };
             }
             return item;
         });
 
-        db.ref('store_closings').set(allClosings).then(() => {
-            alert('Laporan dan ralat status pengambilan permen berhasil disimpan!');
-            document.getElementById('editModal').style.display = 'none';
-        });
-    }
-
-    function deleteRecord(recordId) {
-        if (!isPusatMode) {
-            alert('Akses ditolak! Hanya Master PIN yang dapat menghapus riwayat laporan.');
+        if (updatedCount === 0) {
+            alert('Tidak ada permen tertinggal (status Belum Diambil) di toko ini.');
+            document.getElementById('modalAmbilMasal').style.display = 'none';
             return;
         }
 
-        if (confirm('⚠️ Apakah Anda yakin ingin menghapus permanen riwayat laporan ini?')) {
-            allClosings = allClosings.filter(item => item.id !== recordId);
-            db.ref('store_closings').set(allClosings).then(() => {
-                alert('Riwayat laporan berhasil dihapus!');
-            });
-        }
-    }
-
-    function openBulkCollectModal() {
-        document.getElementById('bulkCollectorName').value = '';
-        document.getElementById('bulkCollectionDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('bulkModal').style.display = 'flex';
-    }
-
-    function confirmBulkCollection() {
-        let name = document.getElementById('bulkCollectorName').value.trim();
-        let rawDate = document.getElementById('bulkCollectionDate').value;
-        if (!name || !rawDate) { alert('Nama pengambil dan tanggal wajib diisi!'); return; }
-
-        let p = rawDate.split('-');
-        let formattedDate = `${p[2]}/${p[1]}/${p[0]} ${new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
-
-        let updated = false;
-        let totalBulkAmount = 0;
-        let datesList = [];
-
-        allClosings = allClosings.map(item => {
-            if (item.storePoint === currentStore && !item.isCollected) {
-                updated = true;
-                totalBulkAmount += (item.physicalCash || 0);
-                if (item.date) datesList.push(item.date);
-                return { ...item, isCollected: true, collectorName: name, collectionDate: formattedDate };
-            }
-            return item;
+        db.ref('tutup_buku_reports').set(allReports).then(() => {
+            alert(`Berhasil menandai ${updatedCount} catatan permen sebagai "Sudah Diambil"!`);
+            document.getElementById('modalAmbilMasal').style.display = 'none';
         });
+    }
 
-        if (updated) {
-            db.ref('store_closings').set(allClosings).then(() => {
-                alert('Semua permen tertinggal di toko ini berhasil ditandai sudah diambil!');
-                document.getElementById('bulkModal').style.display = 'none';
+    function renderReports() {
+        let riwayatTbody = document.getElementById('riwayatTableBody');
+        let pusatTbody = document.getElementById('pusatTableBody');
+        
+        riwayatTbody.innerHTML = '';
+        pusatTbody.innerHTML = '';
 
-                let startDate = datesList.length > 0 ? datesList[datesList.length - 1] : '-';
-                let endDate = datesList.length > 0 ? datesList[0] : '-';
+        let myReports = allReports.filter(i => i.store === currentStore);
+        myReports.sort((a, b) => b.id - a.id);
 
-                sendWhatsAppNotification(currentStore, name, totalBulkAmount, formattedDate, 'Ambil Masal (Penarikan Rutin)', startDate, endDate);
-            });
+        if (myReports.length === 0) {
+            riwayatTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777;">Belum ada riwayat laporan.</td></tr>`;
         } else {
-            alert('Tidak ada permen tertinggal (semua sudah berstatus diambil).');
-            document.getElementById('bulkModal').style.display = 'none';
+            myReports.forEach(r => {
+                let statusBadge = r.statusAmbil === 'Sudah Diambil' 
+                    ? `<span style="color: #2e7d32; font-weight: bold;">✔ Sudah Diambil</span>` 
+                    : `<span style="color: #c62828; font-weight: bold;">⏳ Belum Diambil</span>`;
+                
+                let waText = `Halo, Laporan Tutup Buku ${r.store} Tanggal ${r.date}:\n- Permen Fisik/Tunai: ${formatRp(r.permen)}\n- Parkir: ${formatRp(r.parkir)}\n- Status Permen: ${r.statusAmbil}`;
+                let waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+
+                riwayatTbody.innerHTML += `<tr>
+                    <td>${r.date}</td>
+                    <td>${formatRp(r.permen)}</td>
+                    <td>${statusBadge}</td>
+                    <td>${formatRp(r.parkir)}</td>
+                    <td><a href="${waUrl}" target="_blank" class="btn-wa">Kirim WA</a></td>
+                </tr>`;
+            });
+        }
+
+        let allPusatReports = [...allReports];
+        allPusatReports.sort((a, b) => b.id - a.id);
+
+        if (allPusatReports.length === 0) {
+            pusatTbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Belum ada data laporan dari toko.</td></tr>`;
+        } else {
+            allPusatReports.forEach(r => {
+                let statusBadge = r.statusAmbil === 'Sudah Diambil' 
+                    ? `<span style="color: #2e7d32; font-weight: bold;">Sudah Diambil</span>` 
+                    : `<span style="color: #c62828; font-weight: bold;">Belum Diambil</span>`;
+                
+                let detailAmbil = '-';
+                if (r.ambilInfo) {
+                    let p = r.ambilInfo.tanggal ? r.ambilInfo.tanggal.split('-') : [];
+                    let fmtDate = p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : r.ambilInfo.tanggal;
+                    detailAmbil = `Oleh: <b>${r.ambilInfo.pengambil}</b><br>Tgl: ${fmtDate} (${r.ambilInfo.waktu})`;
+                }
+
+                pusatTbody.innerHTML += `<tr>
+                    <td><b>[${r.store}]</b><br>${r.date}</td>
+                    <td>${formatRp(r.permen)}</td>
+                    <td>${statusBadge}</td>
+                    <td>${detailAmbil}</td>
+                </tr>`;
+            });
         }
     }
 
-    function renderHistory() {
-        let tbody = document.getElementById('historyTableBody');
-        tbody.innerHTML = '';
-        
-        let storeLogs = isPusatMode ? allClosings : allClosings.filter(i => i.storePoint === currentStore);
-        
-        if (storeLogs.length === 0) {
-            let colSpanVal = isPusatMode ? 9 : 8;
-            tbody.innerHTML = `<tr><td colspan="${colSpanVal}" style="text-align: center; color: #777;">Belum ada riwayat laporan.</td></tr>`;
-            return;
+    // Mekanisme Antrean WhatsApp untuk menghindari Popup Blocker browser
+    function sendWaQueue(urls) {
+        pendingWaQueue = urls;
+        if (pendingWaQueue.length === 0) return;
+        document.getElementById('modalWaiQueue').style.display = 'flex';
+        proceedNextWaQueue();
+    }
+
+    function proceedNextWaQueue() {
+        if (pendingWaQueue.length > 0) {
+            let nextUrl = pendingWaQueue.shift();
+            window.open(nextUrl, '_blank');
+            document.getElementById('waQueueStatusText').innerText = `Pesan WhatsApp terkirim. Sisa antrean: ${pendingWaQueue.length} pesan.`;
+            
+            if (pendingWaQueue.length > 0) {
+                document.getElementById('btnNextWaQueue').style.display = 'inline-block';
+            } else {
+                document.getElementById('btnNextWaQueue').style.display = 'none';
+                document.getElementById('waQueueStatusText').innerText = 'Semua pesan WhatsApp dalam antrean telah selesai!';
+            }
         }
-
-        storeLogs.sort((a, b) => {
-            let parseDateStr = (dStr) => {
-                if (!dStr) return 0;
-                let parts = dStr.split('/');
-                if (parts.length === 3) {
-                    return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
-                }
-                return 0;
-            };
-            return parseDateStr(b.date) - parseDateStr(a.date);
-        });
-
-        storeLogs.forEach(i => {
-            let status = i.isCollected ? 
-                `<span style="color: #2e7d32; font-size: 0.8rem;"><b>✔ Sudah Diambil</b><br>Oleh: ${i.collectorName || 'Pusat'}<br>(${i.collectionDate || '-'})</span>` : 
-                `<span style="color: #c62828; font-size: 0.8rem;"><b>❌ Belum Diambil</b></span>`;
-
-            let expenseFormatted = '-';
-            if (i.expenseDesc && i.expenseDesc !== '-') {
-                let rawText = i.expenseDesc;
-                let expenses = rawText.includes('|') ? rawText.split('|').map(e => e.trim()) : rawText.split(',').map(e => e.trim());
-                expenseFormatted = `<div class="vertical-details">`;
-                expenses.forEach(exp => { if (exp) expenseFormatted += `<div>• ${exp}</div>`; });
-                expenseFormatted += `</div>`;
-            }
-
-            let editNoteHtml = '';
-            if (i.editHistory && i.editHistory.length > 0) {
-                editNoteHtml += `<div style="font-size: 0.75rem; color: #d84315; margin-top: 4px; border-top: 1px dashed #ffccbc; padding-top: 2px;"><b>Riwayat Edit / Ralat:</b><br>`;
-                i.editHistory.forEach(log => {
-                    editNoteHtml += `• <i>(${log.timestamp})</i><br>&nbsp;&nbsp;<b>Alasan:</b> ${log.reason}<br>&nbsp;&nbsp;<b>Sebelum:</b> ${log.before}<br>&nbsp;&nbsp;<b>Sesudah:</b> ${log.after}<br>`;
-                });
-                editNoteHtml += `</div>`;
-            }
-
-            let actionTd = isPusatMode ? `<td>
-                <button class="btn-edit" onclick="openEditModal(${i.id})">✏️ Edit / Ralat</button>
-                <button class="btn-delete" onclick="deleteRecord(${i.id})">🗑️ Hapus</button>
-            </td>` : '';
-
-            tbody.innerHTML += `<tr>
-                ${actionTd}
-                <td><b>${i.storePoint}</b></td>
-                <td>${i.date} ${i.time || ''}</td>
-                <td style="color: #2e7d32; font-weight: bold;">${formatRp(i.physicalCash || 0)}</td>
-                <td style="color: #00796b;">${formatRp(i.parking || 0)}</td>
-                <td style="color: #6a1b9a;">${formatRp(i.qris || 0)}</td>
-                <td style="color: #1565c0;">${formatRp(i.debit || 0)}</td>
-                <td>${expenseFormatted}</td>
-                <td>${status} ${editNoteHtml}</td>
-            </tr>`;
-        });
     }
 </script>
 </body>
