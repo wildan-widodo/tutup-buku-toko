@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Pusat & Tutup Buku</title>
-    <meta name="app-version" content="2.19.0-checkpoint-permen-wa">
+    <meta name="app-version" content="2.20.0-checkpoint-permen-wa-manual">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -237,9 +237,8 @@
         <div class="form-group"><label>Nama Pengambil / Petugas</label><input type="text" id="bulkCollectorName" placeholder="Contoh: Budi"></div>
         <div class="form-group"><label>Tanggal Penarikan Fisik</label><input type="date" id="bulkCollectionDate"></div>
         <div class="form-group">
-            <label>Waktu Penarikan (Jam:Menit)</label>
-            <input type="time" id="bulkCollectionTime">
-            <small style="color: #666; display: block; margin-top: 3px;">Biarkan kosong untuk otomatis mengisi waktu terkini.</small>
+            <label>Waktu Penarikan (Jam:Menit) <span style="color: #c62828;">*Wajib Diisi</span></label>
+            <input type="time" id="bulkCollectionTime" required>
         </div>
         <div style="display:flex; gap:10px; margin-top:15px;">
             <button class="btn-cancel" onclick="document.getElementById('bulkModal').style.display='none'">Batal</button>
@@ -413,7 +412,6 @@
         let encodedMessage = encodeURIComponent(message);
         let waUrl = `https://wa.me/${ownerPhone}?text=${encodedMessage}`;
         
-        // Masukkan ke antrean agar tidak terblokir popup browser
         pendingWaQueue.push(waUrl);
         if (pendingWaQueue.length === 1) {
             triggerWaQueueModal();
@@ -765,17 +763,9 @@
         let rawDate = document.getElementById('bulkCollectionDate').value;
         let rawTime = document.getElementById('bulkCollectionTime').value.trim();
 
-        if (!name || !rawDate) { 
-            alert('Nama pengambil dan tanggal wajib diisi!'); 
+        if (!name || !rawDate || !rawTime) { 
+            alert('Nama pengambil, tanggal, dan waktu pengambilan wajib diisi secara manual!'); 
             return; 
-        }
-
-        // Jika waktu dikosongkan, otomatis isi dengan jam terkini
-        if (!rawTime) {
-            let nowTime = new Date();
-            let h = String(nowTime.getHours()).padStart(2, '0');
-            let m = String(nowTime.getMinutes()).padStart(2, '0');
-            rawTime = `${h}:${m}`;
         }
 
         let p = rawDate.split('-');
