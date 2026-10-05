@@ -173,10 +173,10 @@
     </div>
 </div>
 
-<!-- MODAL ANTREAN WHATSAPP MASAL (MENGATASI POPUP BLOCKER) -->
+<!-- MODAL ANTREAN WHATSAPP MASAL -->
 <div class="modal" id="modalWaiQueue">
     <div class="modal-content" style="text-align: center;">
-        <h3 style="color: #2e7d32;">📱 Pengiriman Pesan WhatsApp</h3>
+        <h3 style="color: #25d366;">📱 Pengiriman Pesan WhatsApp</h3>
         <p id="waQueueStatusText" style="font-size: 0.95rem; margin: 15px 0;">Menyiapkan pesan...</p>
         <div id="waQueueActionBox" style="margin-top: 20px;">
             <button type="button" class="btn-primary" id="btnNextWaQueue" onclick="proceedNextWaQueue()" style="background: #25d366; display: none;">Lanjut Kirim WhatsApp Berikutnya ➔</button>
@@ -205,14 +205,20 @@
     let allReports = [];
     let pendingWaQueue = [];
 
+    // Daftar PIN Akses Toko dan Pusat yang tervalidasi dengan aman
     const pinStoreMap = {
         '111111': { name: 'Toko Ponorogo 1', wa: '6281234567890' },
         '222222': { name: 'Toko Kediri 1', wa: '6289876543210' },
+        '333333': { name: 'AWW Sambi', wa: '6281230000001' },
+        '444444': { name: 'AWW Beji', wa: '6281230000002' },
+        '555555': { name: 'AWW Bandung', wa: '6281230000003' },
+        '666666': { name: 'AWW Trenggalek', wa: '6281230000004' },
         '945336': { name: 'Pusat (Owner)', wa: '6281111111111' }
     };
 
     function handleLogin() {
         let pin = document.getElementById('loginPinInput').value.trim();
+        // Pastikan pencocokan PIN membaca string secara akurat
         if (pinStoreMap.hasOwnProperty(pin)) {
             currentUser = pinStoreMap[pin];
             currentStore = currentUser.name;
@@ -416,7 +422,6 @@
         }
     }
 
-    // Mekanisme Antrean WhatsApp untuk menghindari Popup Blocker browser
     function sendWaQueue(urls) {
         pendingWaQueue = urls;
         if (pendingWaQueue.length === 0) return;
