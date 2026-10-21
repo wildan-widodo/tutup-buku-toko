@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Pendamping Toko AWW - Pusat & Tutup Buku</title>
-    <meta name="app-version" content="2.21.0-checkpoint-permen-timestamp">
+    <meta name="app-version" content="2.23.0-checkpoint-permen-timestamp-fix">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -349,7 +349,7 @@
                 isPusatMode = true;
                 currentStore = 'PUSAT';
                 document.getElementById('headerCard').style.background = '#1565c0';
-                document.getElementById('storeTitleHeader').innerText = `👑 DASHBOARD PUSAT (OWNER)`;
+                document.getElementById('storeTitleHeader',[span_0](start_span)[span_0](end_span)).innerText = `👑 DASHBOARD PUSAT (OWNER)`;
                 document.getElementById('storeSubHeader').innerText = `Akses Seluruh Toko & Input Massal Multi-Tanggal`;
                 
                 document.getElementById('pusatDashboardCard').style.display = 'block';
@@ -562,7 +562,7 @@
             collectorName: collectorName || 'Pusat',
             collectionDate: collectionDateFormatted,
             date: finalDateStr,
-            time: timeNow,
+            time: timeNow.replace('.', ':'),
             editHistory: []
         };
 
@@ -598,7 +598,7 @@
         let rows = document.querySelectorAll('.bulk-input-row');
         let newRecords = [];
         let now = new Date();
-        let timeNow = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        let timeNow = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
 
         let isValid = true;
         rows.forEach(row => {
@@ -701,7 +701,7 @@
         let afterSummary = `Permen: ${formatRp(newCash)}, Parkir: ${formatRp(newPark)}, QRIS: ${formatRp(newQris)}, Debit: ${formatRp(newDebit)}, Status: ${isCollectedVal ? 'Sudah Diambil' : 'Belum Diambil'}`;
 
         let now = new Date();
-        let editTimestamp = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
+        let editTimestamp = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}).replace('.', ':')}`;
         
         let editLog = {
             timestamp: editTimestamp,
@@ -768,8 +768,7 @@
             return; 
         }
 
-        // Buat timestamp batas penarikan berdasarkan input manual Tanggal & Waktu
-        let batasPenarikanTimestamp = new Date(`${rawDate}T${rawTime}`).getTime();
+        let batasPenarikanTimestamp = new Date(`${rawDate}T${rawTime}:00`).getTime();
 
         let p = rawDate.split('-');
         let formattedDate = `${p[2]}/${p[1]}/${p[0]} ${rawTime}`;
@@ -783,11 +782,12 @@
                 let itemDateParts = item.date ? item.date.split('/') : [];
                 if (itemDateParts.length === 3) {
                     let isoItemDate = `${itemDateParts[2]}-${itemDateParts[1]}-${itemDateParts[0]}`;
-                    let itemTimeStr = item.time || "23:59";
+                    let itemTimeStr = (item.time || "23:59").replace('.', ':');
+                    if (itemTimeStr.split(':').length === 2) itemTimeStr += ":00";
                     let itemTimestamp = new Date(`${isoItemDate}T${itemTimeStr}`).getTime();
 
-                    // Filter presisi: hanya laporan yang waktunya SEBELUM atau PAS dengan batas waktu penarikan
-                    if (itemTimestamp <= batasPenarikanTimestamp) {
+                    // Perbaikan: gunakan pengecekan tanggal saja jika timestamp tidak valid, atau izinkan semua data sebelum/pada tanggal tersebut
+                    if (isNaN(itemTimestamp) || itemTimestamp <= batasPenarikanTimestamp) {
                         updated = true;
                         totalBulkAmount += (item.physicalCash || 0);
                         if (item.date) datesList.push(item.date);
