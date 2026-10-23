@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Pendamping Toko AWW - Pusat & Tutup Buku</title>
-    <meta name="app-version" content="2.23.0-checkpoint-permen-timestamp-fix">
+    <title>Aplikasi Tutup Buku Toko AWW</title>
+    <meta name="app-version" content="2.25.0-checkpoint-permen-fix">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -349,7 +349,7 @@
                 isPusatMode = true;
                 currentStore = 'PUSAT';
                 document.getElementById('headerCard').style.background = '#1565c0';
-                document.getElementById('storeTitleHeader',[span_0](start_span)[span_0](end_span)).innerText = `👑 DASHBOARD PUSAT (OWNER)`;
+                document.getElementById('storeTitleHeader').innerText = `👑 DASHBOARD PUSAT (OWNER)`;
                 document.getElementById('storeSubHeader').innerText = `Akses Seluruh Toko & Input Massal Multi-Tanggal`;
                 
                 document.getElementById('pusatDashboardCard').style.display = 'block';
@@ -562,7 +562,7 @@
             collectorName: collectorName || 'Pusat',
             collectionDate: collectionDateFormatted,
             date: finalDateStr,
-            time: timeNow.replace('.', ':'),
+            time: timeNow,
             editHistory: []
         };
 
@@ -598,7 +598,7 @@
         let rows = document.querySelectorAll('.bulk-input-row');
         let newRecords = [];
         let now = new Date();
-        let timeNow = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
+        let timeNow = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
         let isValid = true;
         rows.forEach(row => {
@@ -701,7 +701,7 @@
         let afterSummary = `Permen: ${formatRp(newCash)}, Parkir: ${formatRp(newPark)}, QRIS: ${formatRp(newQris)}, Debit: ${formatRp(newDebit)}, Status: ${isCollectedVal ? 'Sudah Diambil' : 'Belum Diambil'}`;
 
         let now = new Date();
-        let editTimestamp = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}).replace('.', ':')}`;
+        let editTimestamp = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
         
         let editLog = {
             timestamp: editTimestamp,
@@ -754,7 +754,7 @@
     function openBulkCollectModal() {
         document.getElementById('bulkCollectorName').value = '';
         document.getElementById('bulkCollectionDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('bulkCollectionTime').value = '';
+        document.getElementById('bulkCollectionTime').value = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}).replace('.', ':');
         document.getElementById('bulkModal').style.display = 'flex';
     }
 
@@ -764,34 +764,42 @@
         let rawTime = document.getElementById('bulkCollectionTime').value.trim();
 
         if (!name || !rawDate || !rawTime) { 
-            alert('Nama pengambil, tanggal, dan waktu pengambilan wajib diisi secara manual!'); 
+            alert('Nama pengambil, tanggal, dan waktu pengambilan wajib diisi!'); 
             return; 
         }
 
-        let batasPenarikanTimestamp = new Date(`${rawDate}T${rawTime}:00`).getTime();
-
         let p = rawDate.split('-');
         let formattedDate = `${p[2]}/${p[1]}/${p[0]} ${rawTime}`;
+        let cutoffTimestamp = new Date(`${rawDate}T${rawTime}`).getTime();
 
         let updated = false;
         let totalBulkAmount = 0;
-        let datesList = [];
+        let datesList = []; // Menyimpan objek tanggal agar bisa diurutkan kronologis
 
         allClosings = allClosings.map(item => {
             if (item.storePoint === currentStore && !item.isCollected) {
-                let itemDateParts = item.date ? item.date.split('/') : [];
-                if (itemDateParts.length === 3) {
-                    let isoItemDate = `${itemDateParts[2]}-${itemDateParts[1]}-${itemDateParts[0]}`;
-                    let itemTimeStr = (item.time || "23:59").replace('.', ':');
-                    if (itemTimeStr.split(':').length === 2) itemTimeStr += ":00";
-                    let itemTimestamp = new Date(`${isoItemDate}T${itemTimeStr}`).getTime();
+                let itemDateStr = item.date; // format DD/MM/YYYY
+                if (itemDateStr) {
+                    let parts = itemDateStr.split('/');
+                    if (parts.length === 3) {
+                        let itemIsoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                        let itemTimeStr = (item.time || "00:00").replace('.', ':');
+                        let itemTimestamp = new Date(`${itemIsoDate}T${itemTimeStr}`).getTime();
 
-                    // Perbaikan: gunakan pengecekan tanggal saja jika timestamp tidak valid, atau izinkan semua data sebelum/pada tanggal tersebut
-                    if (isNaN(itemTimestamp) || itemTimestamp <= batasPenarikanTimestamp) {
-                        updated = true;
-                        totalBulkAmount += (item.physicalCash || 0);
-                        if (item.date) datesList.push(item.date);
-                        return { ...item, isCollected: true, collectorName: name, collectionDate: formattedDate };
+                        if (isNaN(itemTimestamp) || itemTimestamp <= cutoffTimestamp) {
+                            updated = true;
+                            totalBulkAmount += (item.physicalCash || 0);
+                            
+                            // Simpan timestamp beserta string tanggal asli untuk pengurutan akurat
+                            datesList.push({ timeVal: isNaN(itemTimestamp) ? 0 : itemTimestamp, dateStr: item.date });
+
+                            return { 
+                                ...item, 
+                                isCollected: true, 
+                                collectorName: name, 
+                                collectionDate: formattedDate 
+                            };
+                        }
                     }
                 }
             }
@@ -800,16 +808,54 @@
 
         if (updated) {
             db.ref('store_closings').set(allClosings).then(() => {
-                alert('Penarikan massal permen berhasil disaring dan disimpan!');
+                alert('Penarikan massal permen berhasil diproses!');
                 document.getElementById('bulkModal').style.display = 'none';
 
-                let startDate = datesList.length > 0 ? datesList[datesList.length - 1] : '-';
-                let endDate = datesList.length > 0 ? datesList[0] : '-';
+                // Urutkan dari tanggal terdahulu ke tanggal terbaru
+                datesList.sort((a, b) => a.timeVal - b.timeVal);
+                let startDate = datesList.length > 0 ? datesList[0].dateStr : '-';
+                let endDate = datesList.length > 0 ? datesList[datesList.length - 1].dateStr : '-';
 
                 sendWhatsAppNotification(currentStore, name, totalBulkAmount, formattedDate, 'Ambil Masal (Penarikan Rutin)', startDate, endDate);
             });
         } else {
-            alert('Tidak ada permen tertinggal yang waktunya berada sebelum atau pas dengan batas waktu penarikan tersebut.');
+            // Fallback aman: Ambil SEMUA sisa permen yang belum diambil di toko ini jika filter waktu kosong
+            if (confirm('Tidak ada data yang cocok dengan jam tersebut. Apakah Anda ingin mengambil SEMUA sisa permen yang belum diambil di toko ini?')) {
+                allClosings = allClosings.map(item => {
+                    if (item.storePoint === currentStore && !item.isCollected) {
+                        updated = true;
+                        totalBulkAmount += (item.physicalCash || 0);
+                        let itemTimestamp = 0;
+                        let parts = (item.date || "").split('/');
+                        if (parts.length === 3) {
+                            itemTimestamp = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
+                        }
+                        datesList.push({ timeVal: itemTimestamp, dateStr: item.date });
+
+                        return { 
+                            ...item, 
+                            isCollected: true, 
+                            collectorName: name, 
+                            collectionDate: formattedDate 
+                        };
+                    }
+                });
+
+                if (updated) {
+                    db.ref('store_closings').set(allClosings).then(() => {
+                        alert('Semua sisa permen berhasil ditarik!');
+                        document.getElementById('bulkModal').style.display = 'none';
+
+                        datesList.sort((a, b) => a.timeVal - b.timeVal);
+                        let startDate = datesList.length > 0 ? datesList[0].dateStr : '-';
+                        let endDate = datesList.length > 0 ? datesList[datesList.length - 1].dateStr : '-';
+
+                        sendWhatsAppNotification(currentStore, name, totalBulkAmount, formattedDate, 'Ambil Masal (Semua Sisa)', startDate, endDate);
+                    });
+                    return;
+                }
+            }
+            alert('Tidak ada permen tertinggal yang belum diambil di toko ini.');
             document.getElementById('bulkModal').style.display = 'none';
         }
     }
