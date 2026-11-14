@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Tutup Buku Toko AWW</title>
-    <meta name="app-version" content="2.25.0-checkpoint-permen-fix">
+    <meta name="app-version" content="2.26.0-double-submit-wa-fix">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -36,7 +36,7 @@
         .bulk-input-row input.bulk-debit { flex: 1.2; }
         .bulk-input-row select.bulk-status { flex: 1.3; }
 
-        .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
+        .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; transition: 0.3s; }
         .btn-pusat { background: #1565c0; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
         .btn-success { background: #1565c0; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; }
         .btn-cancel { background: #9e9e9e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; }
@@ -192,7 +192,8 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-primary">Kirim Laporan Tutup Buku</button>
+            <!-- ID DITAMBAHKAN DISINI UNTUK FITUR ANTI DOUBLE SUBMIT -->
+            <button type="submit" id="btnSubmitLaporan" class="btn-primary">Kirim Laporan Tutup Buku</button>
         </form>
     </div>
 
@@ -324,6 +325,9 @@
     let isPusatMode = false;
     let pendingWaQueue = [];
     
+    // Variabel Flag untuk mencegah Double Submit
+    let isSubmitting = false; 
+    
     const pinToStoreMap = {
         '64176': 'AWW Sambi',
         '66233': 'AWW Beji',
@@ -399,16 +403,18 @@
     function formatRp(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num); }
     function formatInputNumber(el) { el.value = parseCleanNumber(el.value) > 0 ? formatNumber(parseCleanNumber(el.value)) : ''; }
 
+    // FUNGSI WA DIPERBARUI DENGAN EMOJI UNIVERSAL & ENCODE AMAN
     function sendWhatsAppNotification(storeName, collectorName, amount, dateStr, typeLabel, startDate = "-", endDate = "-") {
-        let message = `*PENGAMBILAN PERMEN*\n\n` +
+        let message = `*LAPORAN PENGAMBILAN PERMEN* 📦\n\n` +
                       `🏪 *Toko:* ${storeName}\n` +
-                      `📦 *Jenis:* ${typeLabel}\n` +
+                      `📝 *Jenis:* ${typeLabel}\n` +
                       `👤 *Pengambil:* ${collectorName}\n` +
                       `💰 *Nominal Permen:* ${formatRp(amount)}\n` +
                       `📅 *Periode Permen:* ${startDate} s/d ${endDate}\n` +
                       `⏰ *Waktu Ambil:* ${dateStr}\n\n` +
-                      `_Pesan otomatis dari Aplikasi Tutup Buku AWW_`;
+                      `✅ _Pesan otomatis dari Aplikasi Tutup Buku AWW_`;
 
+        // Encode string aman untuk semua HP & Browser
         let encodedMessage = encodeURIComponent(message);
         let waUrl = `https://wa.me/${ownerPhone}?text=${encodedMessage}`;
         
@@ -503,71 +509,92 @@
         });
     }
 
-    function saveStoreClosing(e) {
+    // FUNGSI SAVE DIBUAT ASYNC DAN DITAMBAHKAN ANTI DOUBLE SUBMIT
+    async function saveStoreClosing(e) {
         e.preventDefault();
-        let debit = parseCleanNumber(document.getElementById('debitInput').value);
-        let qris = parseCleanNumber(document.getElementById('qrisInput').value);
-        let physicalCash = parseCleanNumber(document.getElementById('physicalCashInput').value);
-        let parking = parseCleanNumber(document.getElementById('parkingInput').value);
-        
-        let expenseParts = [];
-        document.querySelectorAll('.expense-row').forEach(row => {
-            let name = row.querySelector('.exp-name').value.trim();
-            let cost = parseCleanNumber(row.querySelector('.exp-cost').value);
-            if (name && cost > 0) {
-                expenseParts.push(`${name} (${formatRp(cost)})`);
+
+        // 1. CEK PENCEGAHAN DOUBLE SUBMIT
+        if (isSubmitting) {
+            console.log("Proses pengiriman sedang berjalan, klik berulang diabaikan.");
+            return; 
+        }
+
+        const submitBtn = document.getElementById('btnSubmitLaporan');
+
+        try {
+            // 2. KUNCI TOMBOL
+            isSubmitting = true;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '⏳ Mengirim Data...';
+            submitBtn.style.opacity = '0.7';
+            submitBtn.style.cursor = 'not-allowed';
+
+            let debit = parseCleanNumber(document.getElementById('debitInput').value);
+            let qris = parseCleanNumber(document.getElementById('qrisInput').value);
+            let physicalCash = parseCleanNumber(document.getElementById('physicalCashInput').value);
+            let parking = parseCleanNumber(document.getElementById('parkingInput').value);
+            
+            let expenseParts = [];
+            document.querySelectorAll('.expense-row').forEach(row => {
+                let name = row.querySelector('.exp-name').value.trim();
+                let cost = parseCleanNumber(row.querySelector('.exp-cost').value);
+                if (name && cost > 0) {
+                    expenseParts.push(`${name} (${formatRp(cost)})`);
+                }
+            });
+            let expenseDesc = expenseParts.length > 0 ? expenseParts.join(', ') : '-';
+            
+            let isCollected = document.getElementById('isCollectedSelect').value === 'true';
+            let collectorName = isCollected ? document.getElementById('collectorNameInput').value.trim() : '';
+            let rawDate = isCollected ? document.getElementById('collectionDateInput').value : '';
+            
+            let collectionDateFormatted = '-';
+            let timeNow = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+            if (isCollected && rawDate) {
+                let p = rawDate.split('-');
+                collectionDateFormatted = `${p[2]}/${p[1]}/${p[0]} ${timeNow}`;
             }
-        });
-        let expenseDesc = expenseParts.length > 0 ? expenseParts.join(', ') : '-';
-        
-        let isCollected = document.getElementById('isCollectedSelect').value === 'true';
-        let collectorName = isCollected ? document.getElementById('collectorNameInput').value.trim() : '';
-        let rawDate = isCollected ? document.getElementById('collectionDateInput').value : '';
-        
-        let collectionDateFormatted = '-';
-        let timeNow = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-        if (isCollected && rawDate) {
-            let p = rawDate.split('-');
-            collectionDateFormatted = `${p[2]}/${p[1]}/${p[0]} ${timeNow}`;
-        }
 
-        if (isCollected && !collectorName) {
-            alert('Nama pengambil wajib diisi jika permen langsung diambil!');
-            return;
-        }
+            if (isCollected && !collectorName) {
+                alert('Nama pengambil wajib diisi jika permen langsung diambil!');
+                return; // Finally block akan meng-unlock tombol kembali
+            }
 
-        let customDateVal = document.getElementById('closingDateInput').value;
-        let finalDateStr = '';
-        let now = new Date();
-        
-        if (customDateVal) {
-            let p = customDateVal.split('-');
-            finalDateStr = `${p[2]}/${p[1]}/${p[0]}`;
-        } else {
-            finalDateStr = now.toLocaleDateString('id-ID');
-        }
+            let customDateVal = document.getElementById('closingDateInput').value;
+            let finalDateStr = '';
+            let now = new Date();
+            
+            if (customDateVal) {
+                let p = customDateVal.split('-');
+                finalDateStr = `${p[2]}/${p[1]}/${p[0]}`;
+            } else {
+                finalDateStr = now.toLocaleDateString('id-ID');
+            }
 
-        let computerOmset = debit + qris + physicalCash;
+            let computerOmset = debit + qris + physicalCash;
 
-        let newRecord = {
-            id: Date.now(),
-            storePoint: currentStore,
-            debit,
-            qris,
-            physicalCash,
-            parking,
-            computerOmset,
-            expenseDesc,
-            isCollected,
-            collectorName: collectorName || 'Pusat',
-            collectionDate: collectionDateFormatted,
-            date: finalDateStr,
-            time: timeNow,
-            editHistory: []
-        };
+            let newRecord = {
+                id: Date.now(),
+                storePoint: currentStore,
+                debit,
+                qris,
+                physicalCash,
+                parking,
+                computerOmset,
+                expenseDesc,
+                isCollected,
+                collectorName: collectorName || 'Pusat',
+                collectionDate: collectionDateFormatted,
+                date: finalDateStr,
+                time: timeNow,
+                editHistory: []
+            };
 
-        allClosings.push(newRecord);
-        db.ref('store_closings').set(allClosings).then(() => {
+            allClosings.push(newRecord);
+            
+            // 3. AWAIT PROSES FIREBASE
+            await db.ref('store_closings').set(allClosings);
+            
             alert('Laporan tutup buku berhasil disimpan!');
 
             if (isCollected) {
@@ -575,6 +602,7 @@
                 sendWhatsAppNotification(currentStore, collectorName, physicalCash, fullDateTime, 'Pengambilan Saat Tutup Buku', finalDateStr, finalDateStr);
             }
 
+            // RESET FORM
             document.getElementById('debitInput').value = '';
             document.getElementById('qrisInput').value = '';
             document.getElementById('physicalCashInput').value = '';
@@ -590,7 +618,18 @@
             `;
             document.getElementById('isCollectedSelect').value = 'false';
             toggleCollectorSection();
-        });
+
+        } catch (error) {
+            console.error("Terjadi kesalahan sistem/jaringan:", error);
+            alert('Gagal mengirim laporan. Silakan periksa koneksi internet Anda dan coba tekan kirim kembali.');
+        } finally {
+            // 4. BUKA KUNCI TOMBOL APAPUN HASILNYA
+            isSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Kirim Laporan Tutup Buku';
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+        }
     }
 
     function confirmAndSaveBulkPusat() {
