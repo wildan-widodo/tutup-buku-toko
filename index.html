@@ -4,308 +4,583 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Tutup Buku Toko AWW</title>
-    <meta name="app-version" content="2.26.0-double-submit-wa-fix">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <meta name="app-version" content="3.3.1-hide-computer-omset">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDK v9 Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
-        * { box-sizing: border-box; font-family: Arial, sans-serif; }
-        body { background: #f4f6f8; margin: 0; padding: 15px; }
-        .container { max-width: 1200px; margin: auto; display: none; }
-        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2, h3 { margin-top: 0; color: #333; }
-        .form-group { margin-bottom: 15px; text-align: left; }
-        label { display: block; margin-bottom: 5px; color: #666; font-weight: bold; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.95rem; }
-        
-        .expense-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
-        .expense-row input { flex: 2; }
-        .btn-add-row { background: #00796b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; }
-        .btn-del-row { background: #c62828; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        :root {
+            --bg-color: #f3f6f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --border: #e2e8f0;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06);
+        }
 
-        .highlight-box { background: #e8f5e9; border: 2px dashed #2e7d32; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        .pusat-box { background: #e3f2fd; border: 2px dashed #1565c0; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        
-        .bulk-input-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
-        .bulk-input-row input.bulk-date { flex: 1.5; }
-        .bulk-input-row input.bulk-cash { flex: 1.5; }
-        .bulk-input-row input.bulk-park { flex: 1.2; }
-        .bulk-input-row input.bulk-qris { flex: 1.2; }
-        .bulk-input-row input.bulk-debit { flex: 1.2; }
-        .bulk-input-row select.bulk-status { flex: 1.3; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg-color); color: var(--text-main); padding: 16px; line-height: 1.5; }
 
-        .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; transition: 0.3s; }
-        .btn-pusat { background: #1565c0; color: white; border: none; padding: 12px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1.1rem; }
-        .btn-success { background: #1565c0; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 15px; }
-        .btn-cancel { background: #9e9e9e; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; }
-        .btn-edit { background: #e0f2f1; color: #00796b; border: 1px solid #b2dfdb; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; margin-right: 4px; }
-        .btn-delete { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
-        
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.85rem; white-space: nowrap; }
-        th { background: #f8f9fa; }
-        .vertical-details { font-size: 0.8rem; line-height: 1.4; white-space: normal; min-width: 160px; }
-        .login-card { max-width: 380px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
-        
-        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 450px; text-align: left; max-height: 90vh; overflow-y: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .nominal-center { text-align: center !important; }
+
+        .container { max-width: 1100px; margin: 0 auto; display: none; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* LOGIN PIN TOKO */
+        .login-container {
+            max-width: 410px; margin: 8vh auto; background: #fff; padding: 36px 28px;
+            border-radius: var(--radius-lg); box-shadow: var(--shadow-md); text-align: center; border: 1px solid var(--border);
+        }
+        .login-badge {
+            display: inline-block; background: #eef2ff; color: var(--primary); font-weight: 700;
+            font-size: 0.78rem; padding: 5px 12px; border-radius: 999px; margin-bottom: 10px;
+        }
+        .pin-input-box {
+            text-align: center; letter-spacing: 8px; font-size: 1.55rem; font-weight: 800;
+            background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px solid var(--border);
+        }
+
+        /* HEADER */
+        .app-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
+            color: #fff; padding: 20px 24px; border-radius: var(--radius-lg);
+            margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.18);
+        }
+        .app-header h1 { font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .app-header p { font-size: 0.85rem; opacity: 0.88; margin-top: 2px; }
+
+        /* NAV TABS */
+        .nav-tabs {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+            background: #e2e8f0; padding: 6px; border-radius: 12px; margin-bottom: 20px;
+        }
+        .nav-tab-btn {
+            border: none; background: transparent; padding: 11px 10px; border-radius: 8px;
+            font-weight: 700; font-size: 0.9rem; color: #475569; cursor: pointer; transition: 0.2s;
+        }
+        .nav-tab-btn.active { background: #fff; color: var(--primary); box-shadow: var(--shadow-sm); }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fadeIn 0.25s ease-out; }
+
+        /* CARDS & STATS */
+        .card {
+            background: var(--card-bg); padding: 22px; border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md); border: 1px solid var(--border); margin-bottom: 20px;
+        }
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+            margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+        }
+        .card-header h3 { font-size: 1.12rem; font-weight: 700; color: var(--text-main); }
+
+        .stat-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 20px;
+        }
+        .stat-box {
+            background: #fff; padding: 16px 18px; border-radius: var(--radius-md);
+            border: 1px solid var(--border); box-shadow: var(--shadow-sm); text-align: center;
+        }
+        .stat-box span { display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; text-align: center; }
+        .stat-box strong { font-size: 1.35rem; font-weight: 800; color: var(--text-main); word-break: break-word; display: block; text-align: center; }
+
+        /* FORMS */
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 768px) {
+            .form-grid-2 { grid-template-columns: 1fr; }
+            .nav-tab-btn { font-size: 0.8rem; padding: 10px 6px; }
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.88rem; font-weight: 600; color: #334155; margin-bottom: 6px; }
+        input[type="text"], input[type="date"], input[type="time"], input[type="datetime-local"], input[type="password"], select, textarea {
+            width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 0.98rem; color: var(--text-main); background: #fff; outline: none; transition: 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); }
+        .money-input { font-weight: 700; text-align: center; font-size: 1.08rem; }
+
+        /* TABEL PENGISIAN NOMINAL KASIR (BARIS PER BARIS FAMILIAR) */
+        .cashier-entry-table {
+            width: 100%; border-collapse: collapse; border: 1px solid var(--border);
+            border-radius: var(--radius-md); overflow: hidden; margin-bottom: 18px; background: #fff;
+        }
+        .cashier-entry-table th {
+            background: #f8fafc; padding: 12px 15px; font-size: 0.8rem; font-weight: 700;
+            color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border);
+        }
+        .cashier-entry-table td {
+            padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align: middle;
+        }
+        .cashier-entry-table tr:last-child td { border-bottom: none; }
+        .cashier-entry-table .row-label {
+            font-weight: 700; font-size: 0.96rem; color: var(--text-main); width: 42%;
+        }
+        .cashier-entry-table .row-sub {
+            display: block; font-size: 0.78rem; font-weight: 500; color: var(--text-muted); margin-top: 2px;
+        }
+        .cashier-entry-table input.money-input {
+            background: #f8fafc; border: 1px solid #cbd5e1; font-size: 1.12rem; padding: 11px 12px;
+        }
+        .cashier-entry-table input.money-input:focus {
+            background: #fff; border-color: var(--primary);
+        }
+
+        /* EXPENSE ROWS INSIDE TABLE */
+        .expense-row {
+            display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 8px; margin-bottom: 8px; align-items: center;
+        }
+        @media (max-width: 600px) {
+            .cashier-entry-table .row-label { width: 38%; font-size: 0.88rem; }
+            .expense-row { grid-template-columns: 1fr auto; }
+            .expense-row input:first-child { grid-column: 1 / -1; }
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 11px 18px; border-radius: 8px; font-weight: 600; font-size: 0.92rem;
+            border: none; cursor: pointer; transition: 0.2s; text-decoration: none;
+        }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-warning { background: var(--warning); color: #fff; }
+        .btn-outline { background: #fff; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: #f8fafc; }
+        .btn-sm { padding: 6px 12px; font-size: 0.82rem; }
+        .btn-block { width: 100%; padding: 14px; font-size: 1rem; }
+
+        /* TABLES */
+        .table-responsive { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); }
+        table.data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        table.data-table th, table.data-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.9rem; vertical-align: middle; }
+        table.data-table th { background: #f8fafc; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        table.data-table tbody tr:hover { background: #f8fafc; }
+
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 700; }
+        .badge-success { background: var(--success-light); color: #065f46; }
+        .badge-danger { background: var(--danger-light); color: #991b1b; }
+        .badge-info { background: #e0e7ff; color: #3730a3; }
+
+        /* PICKUP PREVIEW BOX */
+        .pickup-preview-card {
+            background: #ecfdf5; border: 1px solid #a7f3d0; border-left: 5px solid var(--success);
+            padding: 18px; border-radius: var(--radius-md); margin-top: 16px; text-align: center;
+        }
+        .pickup-preview-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px;
+        }
+        .pickup-preview-item {
+            background: #ffffff; padding: 10px; border-radius: 8px; border: 1px solid #d1fae5; text-align: center;
+        }
+        .pickup-preview-item span { display: block; font-size: 0.78rem; color: #065f46; font-weight: 600; text-align: center; }
+        .pickup-preview-item strong { font-size: 1.08rem; color: #064e3b; font-weight: 800; display: block; text-align: center; margin-top: 2px; }
+
+        /* MODAL */
+        .modal {
+            display: none; position: fixed; inset: 0; z-index: 100;
+            background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(3px);
+            justify-content: center; align-items: center; padding: 16px;
+        }
+        .modal-content {
+            background: #fff; padding: 26px; border-radius: var(--radius-lg);
+            width: 100%; max-width: 480px; box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2);
+            max-height: 90vh; overflow-y: auto;
+        }
+        .wa-box {
+            background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px;
+            padding: 14px; font-family: monospace; font-size: 0.88rem; white-space: pre-wrap;
+            color: #0f172a; margin: 14px 0; line-height: 1.55;
+        }
     </style>
 </head>
 <body>
 
-<!-- HALAMAN LOGIN PIN -->
-<div class="login-card" id="loginCard">
-    <h2>Login Toko AWW</h2>
-    <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Masukkan PIN Akses Toko Anda</p>
-    <div class="form-group">
-        <label>PIN Akses</label>
-        <input type="password" id="loginPinInput" placeholder="••••" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.3rem;" onkeydown="if(event.key==='Enter'){ handleStoreLogin(); }">
-    </div>
-    <button type="button" class="btn-primary" onclick="handleStoreLogin()">Masuk</button>
-    <div id="loginError" style="color: #c62828; font-size: 0.85rem; margin-top: 15px;"></div>
-</div>
+<!-- ==========================================
+     HALAMAN LOGIN PIN UNIK TIAP TOKO
+     ========================================== -->
+<div class="login-container" id="loginCard">
+    <div class="login-badge">🔐 AKSES KASIR & TOKO</div>
+    <h2 style="font-weight: 800; font-size: 1.65rem; color: var(--text-main); margin-bottom: 4px;">Tutup Buku Toko AWW</h2>
+    <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 22px;">Pilih titik toko dan masukkan PIN unik toko Anda</p>
 
-<!-- APLIKASI UTAMA -->
-<div class="container" id="appContainer">
-    <div class="card" style="display: flex; justify-content: space-between; align-items: center; background: #2e7d32; color: white; flex-wrap: wrap; gap: 10px;" id="headerCard">
-        <div>
-            <h2 id="storeTitleHeader" style="margin: 0; color: white;">🏪 Toko AWW</h2>
-            <p id="storeSubHeader" style="font-size: 0.85rem; margin: 5px 0 0 0;">Aplikasi Tutup Buku Harian</p>
-        </div>
-        <button class="btn-cancel" onclick="handleStoreLogout()" style="width: auto; padding: 6px 12px; background: #c62828;">🚪 Keluar / Ganti Akun</button>
-    </div>
-
-    <!-- DASHBOARD PUSAT: INPUT MASSAL MULTI-TANGGAL -->
-    <div class="card" id="pusatDashboardCard" style="display: none;">
-        <h3 style="color: #1565c0;">⚙️ Panel Input Massal Multi-Tanggal (Pusat / Owner)</h3>
-        <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">Pilih toko, lalu tambahkan baris tanggal sebanyak yang Anda butuhkan. Setelah semua terisi, klik <b>Konfirmasi & Simpan Semua</b> di bawah.</p>
-        
-        <div class="pusat-box">
-            <div class="form-group" style="max-width: 400px;">
-                <label style="color: #1565c0;">🏪 Pilih Toko Tujuan Susulan:</label>
-                <select id="pusatTargetStore" required>
-                    <option value="AWW Sambi">AWW Sambi</option>
-                    <option value="AWW Beji">AWW Beji</option>
-                    <option value="AWW Bandung">AWW Bandung</option>
-                    <option value="AWW Trenggalek">AWW Trenggalek</option>
-                    <option value="AWW Ponorogo">AWW Ponorogo</option>
-                </select>
-            </div>
-
-            <div style="font-size: 0.85rem; color: #333; font-weight: bold; margin-bottom: 5px;">Daftar Tanggal & Data Susulan:</div>
-            
-            <div style="display: flex; font-size: 0.75rem; color: #555; font-weight: bold; margin-bottom: 4px; gap: 8px;">
-                <span style="flex: 1.5;">Tanggal</span>
-                <span style="flex: 1.5;">Permen Fisik (Rp)</span>
-                <span style="flex: 1.2;">Parkir (Rp)</span>
-                <span style="flex: 1.2;">QRIS (Rp)</span>
-                <span style="flex: 1.2;">Debit (Rp)</span>
-                <span style="flex: 1.3;">Status Permen</span>
-                <span style="width: 35px;"></span>
-            </div>
-
-            <div id="bulkRowsContainer">
-                <div class="bulk-input-row">
-                    <input type="date" class="bulk-date" required>
-                    <input type="text" class="bulk-cash" inputmode="numeric" placeholder="Permen Fisik" oninput="formatInputNumber(this)" required>
-                    <input type="text" class="bulk-park" inputmode="numeric" placeholder="Parkir" oninput="formatInputNumber(this)" required>
-                    <input type="text" class="bulk-qris" inputmode="numeric" placeholder="QRIS" oninput="formatInputNumber(this)" required>
-                    <input type="text" class="bulk-debit" inputmode="numeric" placeholder="Debit" oninput="formatInputNumber(this)" required>
-                    <select class="bulk-status">
-                        <option value="true">🟢 Diambil</option>
-                        <option value="false">🔴 Belum Diambil</option>
-                    </select>
-                    <button type="button" class="btn-del-row" onclick="removeBulkRow(this)" style="display:none;">✕</button>
-                </div>
-            </div>
-
-            <button type="button" class="btn-add-row" onclick="addBulkRow()" style="background:#1565c0; margin-top: 10px;">+ Tambah Baris Tanggal Lain</button>
-        </div>
-
-        <button type="button" class="btn-pusat" onclick="confirmAndSaveBulkPusat()">🚀 Konfirmasi & Simpan Semua Data Massal</button>
-    </div>
-
-    <!-- FORM TUTUP BUKU HARIAN (UNTUK TOKO) -->
-    <div class="card" id="storeClosingFormCard">
-        <h3>📝 Form Tutup Buku Harian</h3>
-        <form onsubmit="saveStoreClosing(event)">
-            <div class="form-group">
-                <label>Tanggal Laporan (Opsional)</label>
-                <input type="date" id="closingDateInput">
-                <small style="color: #666; font-size: 0.75rem;">Biarkan kosong jika ingin menggunakan tanggal hari ini secara otomatis.</small>
-            </div>
-
-            <div class="form-group">
-                <label>Total Kartu Debit (Rp)</label>
-                <input type="text" id="debitInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
-            </div>
-
-            <div class="form-group">
-                <label>Total QRIS (Rp)</label>
-                <input type="text" id="qrisInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
-            </div>
-
-            <div class="form-group">
-                <label>Total Permen Fisik / Tunai Kasir (Rp)</label>
-                <input type="text" id="physicalCashInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
-            </div>
-
-            <div class="form-group">
-                <label>Total Parkir (Rp)</label>
-                <input type="text" id="parkingInput" inputmode="numeric" placeholder="0" oninput="formatInputNumber(this)" required>
-            </div>
-
-            <!-- BAGIAN RINCIAN PENGELUARAN DINAMIS -->
-            <div class="form-group">
-                <label>Rincian Pengeluaran Toko</label>
-                <div id="expenseRowsContainer">
-                    <div class="expense-row">
-                        <input type="text" class="exp-name" placeholder="Nama Keperluan (Contoh: Infak / Parkir)">
-                        <input type="text" class="exp-cost" inputmode="numeric" placeholder="Nominal (Rp)" oninput="formatInputNumber(this)">
-                        <button type="button" class="btn-del-row" onclick="removeExpenseRow(this)" style="display:none;">✕</button>
-                    </div>
-                </div>
-                <button type="button" class="btn-add-row" onclick="addExpenseRow()">+ Tambah Baris Pengeluaran</button>
-            </div>
-
-            <div class="highlight-box">
-                <div class="form-group" style="margin-bottom: 10px;">
-                    <label style="color: #1b5e20;">🔒 STATUS PENGAMBILAN PERMEN FISIK:</label>
-                    <select id="isCollectedSelect" onchange="toggleCollectorSection()" required>
-                        <option value="false">🔴 Belum Diambil (Masih di Toko)</option>
-                        <option value="true">🟢 Langsung Diambil Saat Tutup Buku</option>
-                    </select>
-                </div>
-                
-                <div id="collectorSection" style="display: none;">
-                    <div class="form-group">
-                        <label style="color: #1b5e20;">👤 Nama Pengambil:</label>
-                        <input type="text" id="collectorNameInput" placeholder="Contoh: Pak Sentot (Bagian Ambil)">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label style="color: #1b5e20;">📅 Tanggal Pengambilan:</label>
-                        <input type="date" id="collectionDateInput">
-                    </div>
-                </div>
-            </div>
-
-            <!-- ID DITAMBAHKAN DISINI UNTUK FITUR ANTI DOUBLE SUBMIT -->
-            <button type="submit" id="btnSubmitLaporan" class="btn-primary">Kirim Laporan Tutup Buku</button>
-        </form>
-    </div>
-
-    <!-- FITUR AMBIL MASAL OTOMATIS TANGGAL SEBELUMNYA -->
-    <div class="card" id="bulkCollectCard">
-        <h3>📦 Ambil Masal Permen Fisik Belum Diambil</h3>
-        <p style="font-size: 0.85rem; color: #666; margin-bottom: 12px;">Jika hari ini pak bos mengambil semua permen yang tertinggal di toko ini, klik tombol di bawah ini.</p>
-        <button type="button" class="btn-success" onclick="openBulkCollectModal()">📦 Ambil Semua Permen Tertinggal di Toko Ini</button>
-    </div>
-
-    <!-- RIWAYAT LAPORAN -->
-    <div class="card">
-        <h3 id="historyTitleLabel">📋 Riwayat Laporan Toko Ini</h3>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th id="thActionHeader" style="display:none;">Aksi Master</th>
-                        <th>Toko</th>
-                        <th>Tanggal & Waktu</th>
-                        <th>Permen Fisik</th>
-                        <th>Parkir</th>
-                        <th>QRIS</th>
-                        <th>Debit</th>
-                        <th>Pengeluaran Toko</th>
-                        <th>Status Ambil Permen</th>
-                    </tr>
-                </thead>
-                <tbody id="historyTableBody">
-                    <tr><td colspan="9" style="text-align: center; color: #777;">Memuat data...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL AMBIL MASAL -->
-<div class="modal" id="bulkModal">
-    <div class="modal-content" style="width: 380px; text-align: left;">
-        <h3 style="text-align: center;">Konfirmasi Ambil Masal</h3>
-        <p style="font-size:0.85rem; color:#666; text-align: center;">Semua sisa permen yang belum diambil di toko ini akan ditandai sudah diambil.</p>
-        <div class="form-group"><label>Nama Pengambil / Petugas</label><input type="text" id="bulkCollectorName" placeholder="Contoh: Budi"></div>
-        <div class="form-group"><label>Tanggal Penarikan Fisik</label><input type="date" id="bulkCollectionDate"></div>
-        <div class="form-group">
-            <label>Waktu Penarikan (Jam:Menit) <span style="color: #c62828;">*Wajib Diisi</span></label>
-            <input type="time" id="bulkCollectionTime" required>
-        </div>
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <button class="btn-cancel" onclick="document.getElementById('bulkModal').style.display='none'">Batal</button>
-            <button class="btn-primary" onclick="confirmBulkCollection()" style="background:#1565c0;">Proses Ambil</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL ANTREAN WHATSAPP MASAL (MENGATASI POPUP BLOCKER) -->
-<div class="modal" id="modalWaQueue">
-    <div class="modal-content" style="text-align: center;">
-        <h3 style="color: #25d366;">📱 Pengiriman Pesan WhatsApp</h3>
-        <p id="waQueueStatusText" style="font-size: 0.95rem; margin: 15px 0;">Menyiapkan pesan...</p>
-        <div id="waQueueActionBox" style="margin-top: 20px;">
-            <button type="button" class="btn-primary" id="btnNextWaQueue" onclick="proceedNextWaQueue()" style="background: #25d366; display: none;">Lanjut Kirim WhatsApp Berikutnya ➔</button>
-            <button type="button" class="btn-cancel" onclick="document.getElementById('modalWaQueue').style.display='none'" style="margin-top: 10px; background: #555;">Tutup</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL EDIT LAPORAN -->
-<div class="modal" id="editModal">
-    <div class="modal-content">
-        <h3>✏️ Edit Laporan Tutup Buku (Pusat)</h3>
-        <input type="hidden" id="editRecordId">
-        
-        <div class="form-group">
-            <label>Total Permen Fisik (Rp)</label>
-            <input type="text" id="editPhysicalCash" inputmode="numeric" oninput="formatInputNumber(this)" required>
-        </div>
-        <div class="form-group">
-            <label>Total Parkir (Rp)</label>
-            <input type="text" id="editParking" inputmode="numeric" oninput="formatInputNumber(this)" required>
-        </div>
-        <div class="form-group">
-            <label>Total QRIS (Rp)</label>
-            <input type="text" id="editQris" inputmode="numeric" oninput="formatInputNumber(this)" required>
-        </div>
-        <div class="form-group">
-            <label>Total Kartu Debit (Rp)</label>
-            <input type="text" id="editDebit" inputmode="numeric" oninput="formatInputNumber(this)" required>
-        </div>
-
-        <div class="form-group" style="background: #e8f5e9; padding: 12px; border-radius: 6px; border: 1px solid #c8e6c9;">
-            <label style="color: #1b5e20;">🍬 Ralat Status Pengambilan Permen:</label>
-            <select id="editStatusPermen" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; background: #fff;">
-                <option value="false">❌ Belum Diambil (Masih di Toko)</option>
-                <option value="true">🟢 Sudah Diambil</option>
+    <form onsubmit="handleStorePinLogin(event)">
+        <div class="form-group" style="text-align: left;">
+            <label>📍 Pilih Titik Toko</label>
+            <select id="loginStoreSelect" required style="font-weight: 700; color: var(--primary); background: #eef2ff; border-color: #c7d2fe;">
+                <option value="AWW Sambi">AWW Sambi</option>
+                <option value="AWW Beji">AWW Beji</option>
+                <option value="AWW Bandung">AWW Bandung</option>
+                <option value="AWW Trenggalek">AWW Trenggalek</option>
+                <option value="AWW Ponorogo">AWW Ponorogo</option>
             </select>
         </div>
 
-        <div class="form-group" style="background: #fff3e0; padding: 10px; border-radius: 4px; border: 1px solid #ffe0b2;">
-            <label style="color: #e65100;">⚠️ Alasan Mengedit Laporan (Wajib):</label>
-            <input type="text" id="editReasonInput" placeholder="Contoh: Ralat status permen tanggal tersebut ternyata belum diambil" required style="background: #fff;">
+        <div class="form-group" style="text-align: left;">
+            <label>🔑 PIN Unik Toko</label>
+            <input type="password" id="loginStorePinInput" class="pin-input-box" inputmode="numeric" maxlength="6" placeholder="••••" required>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="btn-cancel" onclick="document.getElementById('editModal').style.display='none'">Batal</button>
-            <button class="btn-primary" onclick="submitEditRecord()" style="background:#00796b;">Simpan Perubahan</button>
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 8px;">Masuk ke Toko</button>
+    </form>
+
+    <div id="loginError" style="color: var(--danger); font-size: 0.84rem; margin-top: 12px; font-weight: 600;"></div>
+
+    <div style="margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--border);">
+        <button type="button" class="btn btn-outline btn-sm" onclick="requestManageStorePins()">⚙️ Kelola PIN Tiap Toko (Master PIN)</button>
+    </div>
+</div>
+
+<!-- ==========================================
+     APLIKASI UTAMA TOKO
+     ========================================== -->
+<div class="container" id="appContainer">
+
+    <!-- HEADER -->
+    <div class="app-header">
+        <div>
+            <h1>🏪 <span id="headerStoreName">AWW Sambi</span></h1>
+            <p>Input Tutup Buku Harian & Penarikan Permen • Terhubung Pusat</p>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="requestManageStorePins()">⚙️ PIN Toko</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="handleStoreLogout()">🔒 Keluar / Ganti Toko</button>
+        </div>
+    </div>
+
+    <!-- RINGKASAN SALDO DI TOKO SAAT INI (NOMINAL DI TENGAH) -->
+    <div class="stat-grid">
+        <div class="stat-box" style="border-top: 4px solid var(--danger);">
+            <span>Permen Fisik (Belum Diambil)</span>
+            <strong id="statUncollectedPermen" style="color: var(--danger);">Rp 0</strong>
+        </div>
+        <div class="stat-box" style="border-top: 4px solid var(--success);">
+            <span>Parkir (Belum Diambil)</span>
+            <strong id="statUncollectedParkir" style="color: var(--success);">Rp 0</strong>
+        </div>
+        <div class="stat-box" style="border-top: 4px solid var(--warning);">
+            <span>Jumlah Hari Belum Ditarik</span>
+            <strong id="statUncollectedDays" style="color: #b45309;">0 Hari</strong>
+        </div>
+    </div>
+
+    <!-- NAVIGASI 3 TAB -->
+    <div class="nav-tabs">
+        <button type="button" class="nav-tab-btn active" id="tabBtn1" onclick="switchTab(1)">📝 Input Tutup Buku</button>
+        <button type="button" class="nav-tab-btn" id="tabBtn2" onclick="switchTab(2)">📦 Ambil Masal Permen</button>
+        <button type="button" class="nav-tab-btn" id="tabBtn3" onclick="switchTab(3)">🕰️ Riwayat Toko</button>
+    </div>
+
+    <!-- ==========================================
+         TAB 1: INPUT TUTUP BUKU HARIAN (URUTAN BARIS FAMILIAR)
+         ========================================== -->
+    <div class="tab-panel active" id="tabPanel1">
+        <div class="card">
+            <div class="card-header">
+                <h3>📝 Form Tutup Buku Harian (<span id="formStoreLabel" style="color: var(--primary);">AWW Sambi</span>)</h3>
+            </div>
+
+            <form id="closingForm" onsubmit="saveStoreClosing(event)">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>📅 Tanggal Tutup Buku</label>
+                        <input type="date" id="closingDateInput" required>
+                    </div>
+                    <div class="form-group">
+                        <label>⏰ Jam Tutup Buku</label>
+                        <input type="time" id="closingTimeInput" required>
+                    </div>
+                </div>
+
+                <!-- TABEL BARIS & KOLOM PENGISIAN KASIR -->
+                <table class="cashier-entry-table">
+                    <thead>
+                        <tr>
+                            <th>Jenis / Keterangan</th>
+                            <th class="nominal-center">Nominal (Rp)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- BARIS 1: DEBIT -->
+                        <tr>
+                            <td class="row-label">
+                                💳 Debit / EDC
+                                <span class="row-sub">Total struk mesin EDC</span>
+                            </td>
+                            <td>
+                                <input type="text" id="debitInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)">
+                            </td>
+                        </tr>
+
+                        <!-- BARIS 2: QRIS -->
+                        <tr>
+                            <td class="row-label">
+                                📱 QRIS
+                                <span class="row-sub">Total pembayaran scan QRIS</span>
+                            </td>
+                            <td>
+                                <input type="text" id="qrisInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)">
+                            </td>
+                        </tr>
+
+                        <!-- BARIS 3: FISIK (PERMEN) -->
+                        <tr>
+                            <td class="row-label">
+                                💵 Fisik (Permen)
+                                <span class="row-sub">Uang tunai hasil penjualan</span>
+                            </td>
+                            <td>
+                                <input type="text" id="physInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)" required>
+                            </td>
+                        </tr>
+
+                        <!-- BARIS 4: PENGELUARAN TOKO -->
+                        <tr>
+                            <td class="row-label" style="vertical-align: top; padding-top: 16px;">
+                                💸 Pengeluaran
+                                <span class="row-sub">Gaji parkir, infak, plastik, dll</span>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="addExpenseRow()" style="margin-top: 8px; border-color: #fca5a5; color: #b91c1c;">+ Tambah Item</button>
+                            </td>
+                            <td>
+                                <div id="expenseRowsContainer"></div>
+                                <div style="text-align: center; margin-top: 6px; font-weight: 700; color: var(--danger); font-size: 0.88rem;">
+                                    Total Pengeluaran: <span id="previewDailyExpense">Rp 0</span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- BARIS 5: PARKIR -->
+                        <tr>
+                            <td class="row-label">
+                                🅿️ Parkir
+                                <span class="row-sub">Total setoran parkir harian</span>
+                            </td>
+                            <td>
+                                <input type="text" id="parkingInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)" style="border-color: #6ee7b7; color: #065f46;">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <button type="submit" class="btn btn-primary btn-block">💾 Simpan Tutup Buku Harian</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         TAB 2: AMBIL MASAL (PENARIKAN RUTIN)
+         ========================================== -->
+    <div class="tab-panel" id="tabPanel2">
+        <div class="card" style="border-top: 4px solid var(--success);">
+            <div class="card-header">
+                <div>
+                    <h3 style="color: #047857;">📦 Ambil Masal Permen (Penarikan Rutin)</h3>
+                    <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 3px;">Centang tanggal tutup buku yang ditarik. Waktu ambil & ID sesi otomatis terkirim ke aplikasi pusat.</p>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="toggleSelectAllUncollected()">☑️ Pilih / Batal Semua</button>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label>👤 Nama Pengambil</label>
+                    <input type="text" id="bulkCollectorName" placeholder="Contoh: Pak Sentot" required>
+                </div>
+                <div class="form-group">
+                    <label>⏰ Waktu Pengambilan</label>
+                    <input type="datetime-local" id="bulkPickupDateTime" required>
+                </div>
+            </div>
+
+            <div class="table-responsive" style="margin-bottom: 16px;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 44px; text-align: center;">
+                                <input type="checkbox" id="masterCheckUncollected" checked onchange="toggleSelectAllUncollected(this.checked)">
+                            </th>
+                            <th>Tanggal Tutup Buku</th>
+                            <th class="nominal-center">Nominal Permen Fisik</th>
+                            <th class="nominal-center">Parkir</th>
+                        </tr>
+                    </thead>
+                    <tbody id="uncollectedClosingsBody">
+                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Memuat data belum diambil...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- RINGKASAN OTOMATIS SEBELUM PROSES -->
+            <div class="pickup-preview-card">
+                <div style="font-weight: 800; color: #065f46; font-size: 0.95rem;">📋 Ringkasan Penarikan Terpilih (<span id="pickupStorePreviewLabel">AWW Sambi</span>)</div>
+                <div class="pickup-preview-grid">
+                    <div class="pickup-preview-item">
+                        <span>Periode Permen</span>
+                        <strong id="previewPickupPeriod">-</strong>
+                    </div>
+                    <div class="pickup-preview-item">
+                        <span>Jumlah Laporan</span>
+                        <strong id="previewPickupCount">0 Hari</strong>
+                    </div>
+                    <div class="pickup-preview-item">
+                        <span>Total Nominal Permen</span>
+                        <strong id="previewPickupPermen" style="color: #047857; font-size: 1.18rem;">Rp 0</strong>
+                    </div>
+                    <div class="pickup-preview-item">
+                        <span>Total Parkir Terkait</span>
+                        <strong id="previewPickupParkir">Rp 0</strong>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-success btn-block" style="margin-top: 18px;" onclick="processBulkPickup()">
+                ✅ Simpan Ambil Masal & Buat Laporan WA
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         TAB 3: RIWAYAT TUTUP BUKU & PENGAMBILAN TOKO
+         ========================================== -->
+    <div class="tab-panel" id="tabPanel3">
+        <!-- RIWAYAT PENGAMBILAN PERMEN DI TOKO INI -->
+        <div class="card" style="border-top: 4px solid var(--success);">
+            <div class="card-header">
+                <h3 style="color: #047857;">🚚 Riwayat Pengambilan Permen (<span id="historyPickupStoreLabel">AWW Sambi</span>)</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Waktu Ambil</th>
+                            <th>Periode Permen</th>
+                            <th>Pengambil</th>
+                            <th class="nominal-center">Nominal Permen</th>
+                            <th style="text-align: center;">Laporan WA</th>
+                        </tr>
+                    </thead>
+                    <tbody id="storePickupHistoryBody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 18px;">Belum ada riwayat pengambilan.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RIWAYAT TUTUP BUKU HARIAN TOKO -->
+        <div class="card">
+            <div class="card-header">
+                <h3>📋 Riwayat Tutup Buku Harian (<span id="historyClosingStoreLabel">AWW Sambi</span>)</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tanggal & Jam</th>
+                            <th class="nominal-center">Debit</th>
+                            <th class="nominal-center">QRIS</th>
+                            <th class="nominal-center">Fisik</th>
+                            <th class="nominal-center">Pengeluaran</th>
+                            <th class="nominal-center">Parkir</th>
+                            <th>Status Ambil</th>
+                            <th style="text-align: center;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="storeClosingsHistoryBody">
+                        <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 18px;">Belum ada data tutup buku.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL LAPORAN WHATSAPP SIAP SALIN -->
+<div class="modal" id="waReportModal">
+    <div class="modal-content">
+        <h3 style="color: #047857; font-size: 1.2rem; margin-bottom: 4px;">✅ Pengambilan Tersimpan!</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Data sudah masuk ke aplikasi pusat. Silakan salin atau kirim laporan di bawah ini ke grup WhatsApp:</p>
+        <div class="wa-box" id="waReportTextBox"></div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" style="flex: 1;" onclick="copyWaReportText()">📋 Salin Teks WA</button>
+            <a id="waDirectShareLink" href="#" target="_blank" rel="noopener" class="btn btn-success" style="flex: 1;">📲 Kirim WhatsApp</a>
+        </div>
+        <button type="button" class="btn btn-outline btn-block" style="margin-top: 10px;" onclick="document.getElementById('waReportModal').style.display='none'">Tutup</button>
+    </div>
+</div>
+
+<!-- MODAL PENGATURAN PIN UNIK TIAP TOKO (MASTER PIN) -->
+<div class="modal" id="manageStorePinsModal">
+    <div class="modal-content">
+        <h3 style="color: var(--primary); margin-bottom: 6px;">⚙️ Pengaturan PIN Unik Tiap Toko</h3>
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 16px;">Atur PIN login khusus kasir untuk masing-masing titik toko. Perubahan otomatis tersinkron ke seluruh perangkat.</p>
+
+        <div class="form-group">
+            <label>📍 AWW Sambi</label>
+            <input type="text" id="pinCfg_AWW_Sambi" inputmode="numeric" maxlength="6" style="text-align: center; font-weight: 800; letter-spacing: 4px;">
+        </div>
+        <div class="form-group">
+            <label>📍 AWW Beji</label>
+            <input type="text" id="pinCfg_AWW_Beji" inputmode="numeric" maxlength="6" style="text-align: center; font-weight: 800; letter-spacing: 4px;">
+        </div>
+        <div class="form-group">
+            <label>📍 AWW Bandung</label>
+            <input type="text" id="pinCfg_AWW_Bandung" inputmode="numeric" maxlength="6" style="text-align: center; font-weight: 800; letter-spacing: 4px;">
+        </div>
+        <div class="form-group">
+            <label>📍 AWW Trenggalek</label>
+            <input type="text" id="pinCfg_AWW_Trenggalek" inputmode="numeric" maxlength="6" style="text-align: center; font-weight: 800; letter-spacing: 4px;">
+        </div>
+        <div class="form-group">
+            <label>📍 AWW Ponorogo</label>
+            <input type="text" id="pinCfg_AWW_Ponorogo" inputmode="numeric" maxlength="6" style="text-align: center; font-weight: 800; letter-spacing: 4px;">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="button" class="btn btn-outline" style="flex: 1;" onclick="document.getElementById('manageStorePinsModal').style.display='none'">Batal</button>
+            <button type="button" class="btn btn-primary" style="flex: 1;" onclick="saveStorePinsConfig()">Simpan PIN Toko</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL VERIFIKASI MASTER PIN -->
+<div class="modal" id="masterPinModal">
+    <div class="modal-content" style="max-width: 340px; text-align: center;">
+        <h3 id="masterPinModalTitle" style="color: var(--primary); margin-bottom: 8px;">Verifikasi Master PIN</h3>
+        <p id="masterPinModalDesc" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Masukkan Master PIN untuk melanjutkan:</p>
+        <input type="password" id="masterPinInput" class="pin-input-box" inputmode="numeric" placeholder="••••" maxlength="6" style="margin-bottom: 16px;" onkeydown="if(event.key==='Enter'){ confirmMasterPinAction(); }">
+        <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn btn-outline" style="flex: 1;" onclick="document.getElementById('masterPinModal').style.display='none'">Batal</button>
+            <button type="button" class="btn btn-primary" style="flex: 1;" onclick="confirmMasterPinAction()">Konfirmasi</button>
         </div>
     </div>
 </div>
 
 <script>
-    const ownerPhone = "6282140784095";
-
+    // ==========================================
+    // KONFIGURASI FIREBASE (SAMA DENGAN PUSAT)
+    // ==========================================
     const firebaseConfig = {
         apiKey: "AIzaSyCVJcVrRg4w9xY__bvf_4Lfk0ENQ5X5F8E",
         authDomain: "pencatatan-keuangan-brankas.firebaseapp.com",
@@ -318,650 +593,690 @@
     };
 
     firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.database();
 
-    let allClosings = [];
-    let currentStore = null;
-    let isPusatMode = false;
-    let pendingWaQueue = [];
-    
-    // Variabel Flag untuk mencegah Double Submit
-    let isSubmitting = false; 
-    
-    const pinToStoreMap = {
-        '64176': 'AWW Sambi',
-        '66233': 'AWW Beji',
-        '66274': 'AWW Bandung',
-        '66313': 'AWW Trenggalek',
-        '63416': 'AWW Ponorogo',
-        '123123': 'PUSAT'
+    const storeNames = ['AWW Sambi', 'AWW Beji', 'AWW Bandung', 'AWW Trenggalek', 'AWW Ponorogo'];
+
+    // PIN unik default per toko (bisa diubah & otomatis tersinkron ke Firebase store_pins)
+    let storePins = {
+        'AWW Sambi': '1111',
+        'AWW Beji': '2222',
+        'AWW Bandung': '3333',
+        'AWW Trenggalek': '4444',
+        'AWW Ponorogo': '5555'
     };
 
-    function handleStoreLogin() {
-        let pin = document.getElementById('loginPinInput').value.trim();
+    let masterPin = '9999';
+    let currentLoggedInStore = null;
+    let storeClosings = [];
+    let storeBulkPickups = [];
+    let storeAuditLogs = [];
+    let pendingMasterPinAction = null;
 
-        if (pinToStoreMap.hasOwnProperty(pin)) {
-            let mappedVal = pinToStoreMap[pin];
+    // ==========================================
+    // HELPER FORMAT ANGKA & TANGGAL
+    // ==========================================
+    function formatNumber(num) {
+        return isNaN(num) ? '0' : new Intl.NumberFormat('id-ID').format(num);
+    }
+
+    function parseCleanNumber(str) {
+        if (!str) return 0;
+        return parseFloat(str.toString().replace(/[^\d]/g, '')) || 0;
+    }
+
+    function formatRp(num) {
+        return 'Rp ' + formatNumber(Number(num) || 0);
+    }
+
+    function onMoneyInput(el) {
+        const val = parseCleanNumber(el.value);
+        el.value = val > 0 ? formatNumber(val) : '';
+    }
+
+    function escapeHtml(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function normalizeStoreName(name) {
+        const raw = String(name || '').trim();
+        const found = storeNames.find(s => s.toLowerCase() === raw.toLowerCase());
+        return found || raw;
+    }
+
+    function isoDateToIndo(isoDateStr) {
+        if (!isoDateStr || !isoDateStr.includes('-')) return '';
+        const p = isoDateStr.split('-');
+        return `${p[2].padStart(2, '0')}/${p[1].padStart(2, '0')}/${p[0]}`;
+    }
+
+    function dateTimeLocalToIndo(dtLocalStr) {
+        if (!dtLocalStr || !dtLocalStr.includes('T')) return '';
+        const [dPart, tPart] = dtLocalStr.split('T');
+        return `${isoDateToIndo(dPart)} ${tPart.substring(0, 5)}`;
+    }
+
+    function parseIndoDateToMs(dateStr) {
+        if (!dateStr || typeof dateStr !== 'string') return 0;
+        const cleanDate = dateStr.trim().split(' ')[0];
+        if (cleanDate.includes('/')) {
+            const p = cleanDate.split('/');
+            if (p.length >= 3) {
+                return new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0])).getTime() || 0;
+            }
+        }
+        return 0;
+    }
+
+    function getCurrentDateTimeLocalValue() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+    }
+
+    // ==========================================
+    // INISIALISASI FIREBASE & LISTENER DATA
+    // ==========================================
+    function bootstrapFirebaseListeners() {
+        if (!auth.currentUser && auth.signInAnonymously) {
+            auth.signInAnonymously().catch(() => {});
+        }
+
+        db.ref('vaults_data/masterPin').on('value', snap => {
+            if (snap.val()) masterPin = String(snap.val());
+        });
+
+        db.ref('store_pins').on('value', snap => {
+            const val = snap.val();
+            if (val && typeof val === 'object') {
+                storePins = { ...storePins, ...val };
+            }
+        });
+
+        db.ref('store_closings').on('value', snap => {
+            const raw = snap.val();
+            storeClosings = raw ? (Array.isArray(raw) ? raw.filter(Boolean) : Object.values(raw)) : [];
+            if (currentLoggedInStore) refreshStoreViews();
+        });
+
+        db.ref('store_bulk_pickups').on('value', snap => {
+            const raw = snap.val();
+            storeBulkPickups = raw ? (Array.isArray(raw) ? raw.filter(Boolean) : Object.values(raw)) : [];
+            if (currentLoggedInStore) renderStorePickupHistory();
+        });
+
+        db.ref('store_audit_logs').on('value', snap => {
+            const raw = snap.val();
+            storeAuditLogs = raw ? (Array.isArray(raw) ? raw.filter(Boolean) : Object.values(raw)) : [];
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedStore = localStorage.getItem('aww_last_selected_store');
+        if (savedStore && storeNames.includes(savedStore)) {
+            document.getElementById('loginStoreSelect').value = savedStore;
+        }
+        bootstrapFirebaseListeners();
+    });
+
+    // ==========================================
+    // LOGIN & LOGOUT BERBASIS PIN UNIK TOKO
+    // ==========================================
+    function handleStorePinLogin(e) {
+        e.preventDefault();
+        const selectedStore = normalizeStoreName(document.getElementById('loginStoreSelect').value);
+        const enteredPin = document.getElementById('loginStorePinInput').value.trim();
+        const expectedPin = String(storePins[selectedStore] || '');
+
+        if (enteredPin === expectedPin || enteredPin === String(masterPin)) {
+            currentLoggedInStore = selectedStore;
+            localStorage.setItem('aww_last_selected_store', selectedStore);
+            document.getElementById('loginError').innerText = '';
+            document.getElementById('loginStorePinInput').value = '';
             document.getElementById('loginCard').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
-            
-            let todayStr = new Date().toISOString().split('T')[0];
-            document.getElementById('collectionDateInput').value = todayStr;
-            document.getElementById('closingDateInput').value = todayStr;
-
-            if (mappedVal === 'PUSAT') {
-                isPusatMode = true;
-                currentStore = 'PUSAT';
-                document.getElementById('headerCard').style.background = '#1565c0';
-                document.getElementById('storeTitleHeader').innerText = `👑 DASHBOARD PUSAT (OWNER)`;
-                document.getElementById('storeSubHeader').innerText = `Akses Seluruh Toko & Input Massal Multi-Tanggal`;
-                
-                document.getElementById('pusatDashboardCard').style.display = 'block';
-                document.getElementById('storeClosingFormCard').style.display = 'none';
-                document.getElementById('bulkCollectCard').style.display = 'none';
-                document.getElementById('historyTitleLabel').innerText = `📋 Riwayat Laporan Seluruh Toko`;
-                document.getElementById('thActionHeader').style.display = 'table-cell';
-            } else {
-                isPusatMode = false;
-                currentStore = mappedVal;
-                document.getElementById('headerCard').style.background = '#2e7d32';
-                document.getElementById('storeTitleHeader').innerText = `🏪 ${currentStore}`;
-                document.getElementById('storeSubHeader').innerText = `Aplikasi Pendamping Tutup Buku Harian`;
-                
-                document.getElementById('pusatDashboardCard').style.display = 'none';
-                document.getElementById('storeClosingFormCard').style.display = 'block';
-                document.getElementById('bulkCollectCard').style.display = 'block';
-                document.getElementById('historyTitleLabel').innerText = `📋 Riwayat Laporan Toko Ini`;
-                document.getElementById('thActionHeader').style.display = 'none';
-            }
-            
-            loadData();
+            initStoreWorkspace();
         } else {
-            document.getElementById('loginError').innerText = 'PIN Akses Salah!';
-            document.getElementById('loginPinInput').value = '';
+            document.getElementById('loginError').innerText = `PIN salah untuk ${selectedStore}!`;
+            document.getElementById('loginStorePinInput').value = '';
+            document.getElementById('loginStorePinInput').focus();
         }
     }
 
     function handleStoreLogout() {
-        currentStore = null;
-        isPusatMode = false;
-        document.getElementById('loginCard').style.display = 'block';
+        currentLoggedInStore = null;
         document.getElementById('appContainer').style.display = 'none';
-        document.getElementById('loginPinInput').value = '';
-        document.getElementById('loginError').innerText = '';
+        document.getElementById('loginCard').style.display = 'block';
+        document.getElementById('loginStorePinInput').value = '';
     }
 
-    function loadData() {
-        db.ref('store_closings').on('value', snapshot => {
-            allClosings = snapshot.val() || [];
-            renderHistory();
+    function requestMasterPin(title, desc, callback) {
+        document.getElementById('masterPinModalTitle').innerText = title;
+        document.getElementById('masterPinModalDesc').innerText = desc;
+        document.getElementById('masterPinInput').value = '';
+        pendingMasterPinAction = callback;
+        document.getElementById('masterPinModal').style.display = 'flex';
+        setTimeout(() => document.getElementById('masterPinInput').focus(), 100);
+    }
+
+    function confirmMasterPinAction() {
+        const val = document.getElementById('masterPinInput').value.trim();
+        if (val === String(masterPin)) {
+            document.getElementById('masterPinModal').style.display = 'none';
+            if (pendingMasterPinAction) pendingMasterPinAction();
+            pendingMasterPinAction = null;
+        } else {
+            alert('Master PIN salah!');
+            document.getElementById('masterPinInput').value = '';
+        }
+    }
+
+    function requestManageStorePins() {
+        requestMasterPin('Kelola PIN Tiap Toko', 'Masukkan Master PIN pusat untuk membuka pengaturan PIN toko:', () => {
+            document.getElementById('pinCfg_AWW_Sambi').value = storePins['AWW Sambi'] || '1111';
+            document.getElementById('pinCfg_AWW_Beji').value = storePins['AWW Beji'] || '2222';
+            document.getElementById('pinCfg_AWW_Bandung').value = storePins['AWW Bandung'] || '3333';
+            document.getElementById('pinCfg_AWW_Trenggalek').value = storePins['AWW Trenggalek'] || '4444';
+            document.getElementById('pinCfg_AWW_Ponorogo').value = storePins['AWW Ponorogo'] || '5555';
+            document.getElementById('manageStorePinsModal').style.display = 'flex';
         });
     }
 
-    function formatNumber(num) { return isNaN(num) ? '' : new Intl.NumberFormat('id-ID').format(num); }
-    function parseCleanNumber(str) { return !str ? 0 : parseFloat(str.toString().replace(/\./g, '').replace(/,/g, '')) || 0; }
-    function formatRp(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num); }
-    function formatInputNumber(el) { el.value = parseCleanNumber(el.value) > 0 ? formatNumber(parseCleanNumber(el.value)) : ''; }
+    function saveStorePinsConfig() {
+        const updatedPins = {
+            'AWW Sambi': document.getElementById('pinCfg_AWW_Sambi').value.trim() || '1111',
+            'AWW Beji': document.getElementById('pinCfg_AWW_Beji').value.trim() || '2222',
+            'AWW Bandung': document.getElementById('pinCfg_AWW_Bandung').value.trim() || '3333',
+            'AWW Trenggalek': document.getElementById('pinCfg_AWW_Trenggalek').value.trim() || '4444',
+            'AWW Ponorogo': document.getElementById('pinCfg_AWW_Ponorogo').value.trim() || '5555'
+        };
+        storePins = updatedPins;
+        db.ref('store_pins').set(updatedPins).then(() => {
+            document.getElementById('manageStorePinsModal').style.display = 'none';
+            alert('PIN unik untuk 5 titik toko berhasil disimpan!');
+        }).catch(err => {
+            alert('Gagal menyimpan PIN toko: ' + err.message);
+        });
+    }
 
-    // FUNGSI WA DIPERBARUI DENGAN EMOJI UNIVERSAL & ENCODE AMAN
-    function sendWhatsAppNotification(storeName, collectorName, amount, dateStr, typeLabel, startDate = "-", endDate = "-") {
-        let message = `*LAPORAN PENGAMBILAN PERMEN* 📦\n\n` +
-                      `🏪 *Toko:* ${storeName}\n` +
-                      `📝 *Jenis:* ${typeLabel}\n` +
-                      `👤 *Pengambil:* ${collectorName}\n` +
-                      `💰 *Nominal Permen:* ${formatRp(amount)}\n` +
-                      `📅 *Periode Permen:* ${startDate} s/d ${endDate}\n` +
-                      `⏰ *Waktu Ambil:* ${dateStr}\n\n` +
-                      `✅ _Pesan otomatis dari Aplikasi Tutup Buku AWW_`;
+    // ==========================================
+    // WORKSPACE SETELAH LOGIN TOKO
+    // ==========================================
+    function initStoreWorkspace() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
 
-        // Encode string aman untuk semua HP & Browser
-        let encodedMessage = encodeURIComponent(message);
-        let waUrl = `https://wa.me/${ownerPhone}?text=${encodedMessage}`;
-        
-        pendingWaQueue.push(waUrl);
-        if (pendingWaQueue.length === 1) {
-            triggerWaQueueModal();
+        document.getElementById('closingDateInput').value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById('closingTimeInput').value = `${hh}:${min}`;
+        document.getElementById('bulkPickupDateTime').value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+
+        const savedCollector = localStorage.getItem('aww_last_collector');
+        if (savedCollector) {
+            document.getElementById('bulkCollectorName').value = savedCollector;
+        }
+
+        const expContainer = document.getElementById('expenseRowsContainer');
+        if (expContainer && expContainer.children.length === 0) {
+            addExpenseRow();
+        }
+
+        switchTab(1);
+        refreshStoreViews();
+    }
+
+    function switchTab(tabNum) {
+        [1, 2, 3].forEach(num => {
+            document.getElementById(`tabBtn${num}`).className = num === tabNum ? 'nav-tab-btn active' : 'nav-tab-btn';
+            document.getElementById(`tabPanel${num}`).className = num === tabNum ? 'tab-panel active' : 'tab-panel';
+        });
+        if (tabNum === 2) {
+            document.getElementById('bulkPickupDateTime').value = getCurrentDateTimeLocalValue();
+            renderUncollectedTable();
         }
     }
 
-    function triggerWaQueueModal() {
-        if (pendingWaQueue.length === 0) return;
-        document.getElementById('modalWaQueue').style.display = 'flex';
-        proceedNextWaQueue();
+    function refreshStoreViews() {
+        if (!currentLoggedInStore) return;
+        const activeStore = currentLoggedInStore;
+
+        document.getElementById('headerStoreName').innerText = activeStore;
+        document.getElementById('formStoreLabel').innerText = activeStore;
+        document.getElementById('pickupStorePreviewLabel').innerText = activeStore;
+        document.getElementById('historyPickupStoreLabel').innerText = activeStore;
+        document.getElementById('historyClosingStoreLabel').innerText = activeStore;
+
+        const storeItems = storeClosings.filter(i => normalizeStoreName(i.storePoint) === activeStore);
+        const uncollectedItems = storeItems.filter(i => !i.isCollected);
+
+        let totalPermen = 0;
+        let totalParkir = 0;
+        uncollectedItems.forEach(i => {
+            totalPermen += Number(i.physicalCash || 0);
+            totalParkir += Number(i.parking || 0);
+        });
+
+        document.getElementById('statUncollectedPermen').innerText = formatRp(totalPermen);
+        document.getElementById('statUncollectedParkir').innerText = formatRp(totalParkir);
+        document.getElementById('statUncollectedDays').innerText = `${uncollectedItems.length} Hari`;
+
+        renderUncollectedTable();
+        renderStorePickupHistory();
+        renderStoreClosingsHistory();
     }
 
-    function proceedNextWaQueue() {
-        if (pendingWaQueue.length > 0) {
-            let nextUrl = pendingWaQueue.shift();
-            window.open(nextUrl, '_blank');
-            document.getElementById('waQueueStatusText').innerText = `Pesan WhatsApp terkirim. Sisa antrean: ${pendingWaQueue.length} pesan.`;
-            
-            if (pendingWaQueue.length > 0) {
-                document.getElementById('btnNextWaQueue').style.display = 'inline-block';
-            } else {
-                document.getElementById('btnNextWaQueue').style.display = 'none';
-                document.getElementById('waQueueStatusText').innerText = 'Semua pesan WhatsApp dalam antrean telah selesai!';
-            }
-        }
-    }
-
-    function addExpenseRow() {
-        let container = document.getElementById('expenseRowsContainer');
-        let div = document.createElement('div');
-        div.className = 'expense-row';
-        div.innerHTML = `
-            <input type="text" class="exp-name" placeholder="Nama Keperluan">
-            <input type="text" class="exp-cost" inputmode="numeric" placeholder="Nominal (Rp)" oninput="formatInputNumber(this)">
-            <button type="button" class="btn-del-row" onclick="removeExpenseRow(this)">✕</button>
+    // ==========================================
+    // FORM TUTUP BUKU HARIAN (URUTAN BARIS KASIR)
+    // ==========================================
+    function addExpenseRow(name = '', amount = '') {
+        const container = document.getElementById('expenseRowsContainer');
+        const row = document.createElement('div');
+        row.className = 'expense-row';
+        row.innerHTML = `
+            <input type="text" class="exp-name-input" placeholder="Keperluan (misal: Gaji Parkir)" value="${escapeHtml(name)}">
+            <input type="text" class="exp-amount-input money-input" inputmode="numeric" placeholder="Nominal (Rp)" value="${amount}" oninput="onMoneyInput(this); calculateExpenseTotal()">
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeExpenseRow(this)">✕</button>
         `;
-        container.appendChild(div);
-        updateDeleteButtons();
+        container.appendChild(row);
     }
 
     function removeExpenseRow(btn) {
+        const container = document.getElementById('expenseRowsContainer');
         btn.parentElement.remove();
-        updateDeleteButtons();
+        if (container.children.length === 0) {
+            addExpenseRow();
+        }
+        calculateExpenseTotal();
     }
 
-    function updateDeleteButtons() {
-        let rows = document.querySelectorAll('.expense-row');
-        rows.forEach((r, idx) => {
-            let delBtn = r.querySelector('.btn-del-row');
-            delBtn.style.display = rows.length > 1 ? 'block' : 'none';
+    function calculateExpenseTotal() {
+        let totalExp = 0;
+        document.querySelectorAll('.exp-amount-input').forEach(inp => {
+            totalExp += parseCleanNumber(inp.value);
         });
+        document.getElementById('previewDailyExpense').innerText = formatRp(totalExp);
     }
 
-    function toggleCollectorSection() {
-        let val = document.getElementById('isCollectedSelect').value;
-        document.getElementById('collectorSection').style.display = val === 'true' ? 'block' : 'none';
-    }
-
-    function addBulkRow() {
-        let container = document.getElementById('bulkRowsContainer');
-        let div = document.createElement('div');
-        div.className = 'bulk-input-row';
-        div.innerHTML = `
-            <input type="date" class="bulk-date" required>
-            <input type="text" class="bulk-cash" inputmode="numeric" placeholder="Permen Fisik" oninput="formatInputNumber(this)" required>
-            <input type="text" class="bulk-park" inputmode="numeric" placeholder="Parkir" oninput="formatInputNumber(this)" required>
-            <input type="text" class="bulk-qris" inputmode="numeric" placeholder="QRIS" oninput="formatInputNumber(this)" required>
-            <input type="text" class="bulk-debit" inputmode="numeric" placeholder="Debit" oninput="formatInputNumber(this)" required>
-            <select class="bulk-status">
-                <option value="true">🟢 Diambil</option>
-                <option value="false">🔴 Belum Diambil</option>
-            </select>
-            <button type="button" class="btn-del-row" onclick="removeBulkRow(this)" style="display:none;">✕</button>
-        `;
-        container.appendChild(div);
-        updateBulkDeleteButtons();
-    }
-
-    function removeBulkRow(btn) {
-        btn.parentElement.remove();
-        updateBulkDeleteButtons();
-    }
-
-    function updateBulkDeleteButtons() {
-        let rows = document.querySelectorAll('.bulk-input-row');
-        rows.forEach(r => {
-            let delBtn = r.querySelector('.btn-del-row');
-            delBtn.style.display = rows.length > 1 ? 'block' : 'none';
-        });
-    }
-
-    // FUNGSI SAVE DIBUAT ASYNC DAN DITAMBAHKAN ANTI DOUBLE SUBMIT
-    async function saveStoreClosing(e) {
+    function saveStoreClosing(e) {
         e.preventDefault();
+        if (!currentLoggedInStore) return;
 
-        // 1. CEK PENCEGAHAN DOUBLE SUBMIT
-        if (isSubmitting) {
-            console.log("Proses pengiriman sedang berjalan, klik berulang diabaikan.");
-            return; 
+        const storePoint = currentLoggedInStore;
+        const isoDate = document.getElementById('closingDateInput').value;
+        const timeStr = document.getElementById('closingTimeInput').value || '21:00';
+        const indoDate = isoDateToIndo(isoDate);
+
+        const debit = parseCleanNumber(document.getElementById('debitInput').value);
+        const qris = parseCleanNumber(document.getElementById('qrisInput').value);
+        const physicalCash = parseCleanNumber(document.getElementById('physInput').value);
+        const parking = parseCleanNumber(document.getElementById('parkingInput').value);
+        const computerOmset = debit + qris + physicalCash;
+
+        if (!indoDate) {
+            alert('Tanggal tutup buku wajib diisi!');
+            return;
+        }
+        if (computerOmset <= 0 && parking <= 0) {
+            alert('Isi minimal salah satu nominal omset atau parkir!');
+            return;
         }
 
-        const submitBtn = document.getElementById('btnSubmitLaporan');
-
-        try {
-            // 2. KUNCI TOMBOL
-            isSubmitting = true;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '⏳ Mengirim Data...';
-            submitBtn.style.opacity = '0.7';
-            submitBtn.style.cursor = 'not-allowed';
-
-            let debit = parseCleanNumber(document.getElementById('debitInput').value);
-            let qris = parseCleanNumber(document.getElementById('qrisInput').value);
-            let physicalCash = parseCleanNumber(document.getElementById('physicalCashInput').value);
-            let parking = parseCleanNumber(document.getElementById('parkingInput').value);
-            
-            let expenseParts = [];
-            document.querySelectorAll('.expense-row').forEach(row => {
-                let name = row.querySelector('.exp-name').value.trim();
-                let cost = parseCleanNumber(row.querySelector('.exp-cost').value);
-                if (name && cost > 0) {
-                    expenseParts.push(`${name} (${formatRp(cost)})`);
-                }
-            });
-            let expenseDesc = expenseParts.length > 0 ? expenseParts.join(', ') : '-';
-            
-            let isCollected = document.getElementById('isCollectedSelect').value === 'true';
-            let collectorName = isCollected ? document.getElementById('collectorNameInput').value.trim() : '';
-            let rawDate = isCollected ? document.getElementById('collectionDateInput').value : '';
-            
-            let collectionDateFormatted = '-';
-            let timeNow = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
-            if (isCollected && rawDate) {
-                let p = rawDate.split('-');
-                collectionDateFormatted = `${p[2]}/${p[1]}/${p[0]} ${timeNow}`;
+        const expParts = [];
+        let expenseTotal = 0;
+        document.querySelectorAll('#expenseRowsContainer .expense-row').forEach(row => {
+            const name = row.querySelector('.exp-name-input').value.trim();
+            const amt = parseCleanNumber(row.querySelector('.exp-amount-input').value);
+            if (amt > 0) {
+                const label = name || 'Pengeluaran Toko';
+                expParts.push(`${label} (Rp ${formatNumber(amt)})`);
+                expenseTotal += amt;
             }
-
-            if (isCollected && !collectorName) {
-                alert('Nama pengambil wajib diisi jika permen langsung diambil!');
-                return; // Finally block akan meng-unlock tombol kembali
-            }
-
-            let customDateVal = document.getElementById('closingDateInput').value;
-            let finalDateStr = '';
-            let now = new Date();
-            
-            if (customDateVal) {
-                let p = customDateVal.split('-');
-                finalDateStr = `${p[2]}/${p[1]}/${p[0]}`;
-            } else {
-                finalDateStr = now.toLocaleDateString('id-ID');
-            }
-
-            let computerOmset = debit + qris + physicalCash;
-
-            let newRecord = {
-                id: Date.now(),
-                storePoint: currentStore,
-                debit,
-                qris,
-                physicalCash,
-                parking,
-                computerOmset,
-                expenseDesc,
-                isCollected,
-                collectorName: collectorName || 'Pusat',
-                collectionDate: collectionDateFormatted,
-                date: finalDateStr,
-                time: timeNow,
-                editHistory: []
-            };
-
-            allClosings.push(newRecord);
-            
-            // 3. AWAIT PROSES FIREBASE
-            await db.ref('store_closings').set(allClosings);
-            
-            alert('Laporan tutup buku berhasil disimpan!');
-
-            if (isCollected) {
-                let fullDateTime = `${finalDateStr} ${timeNow}`;
-                sendWhatsAppNotification(currentStore, collectorName, physicalCash, fullDateTime, 'Pengambilan Saat Tutup Buku', finalDateStr, finalDateStr);
-            }
-
-            // RESET FORM
-            document.getElementById('debitInput').value = '';
-            document.getElementById('qrisInput').value = '';
-            document.getElementById('physicalCashInput').value = '';
-            document.getElementById('parkingInput').value = '';
-            document.getElementById('closingDateInput').value = new Date().toISOString().split('T')[0];
-            
-            document.getElementById('expenseRowsContainer').innerHTML = `
-                <div class="expense-row">
-                    <input type="text" class="exp-name" placeholder="Nama Keperluan (Contoh: Infak / Parkir)">
-                    <input type="text" class="exp-cost" inputmode="numeric" placeholder="Nominal (Rp)" oninput="formatInputNumber(this)">
-                    <button type="button" class="btn-del-row" onclick="removeExpenseRow(this)" style="display:none;">✕</button>
-                </div>
-            `;
-            document.getElementById('isCollectedSelect').value = 'false';
-            toggleCollectorSection();
-
-        } catch (error) {
-            console.error("Terjadi kesalahan sistem/jaringan:", error);
-            alert('Gagal mengirim laporan. Silakan periksa koneksi internet Anda dan coba tekan kirim kembali.');
-        } finally {
-            // 4. BUKA KUNCI TOMBOL APAPUN HASILNYA
-            isSubmitting = false;
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Kirim Laporan Tutup Buku';
-            submitBtn.style.opacity = '1';
-            submitBtn.style.cursor = 'pointer';
-        }
-    }
-
-    function confirmAndSaveBulkPusat() {
-        let targetStore = document.getElementById('pusatTargetStore').value;
-        let rows = document.querySelectorAll('.bulk-input-row');
-        let newRecords = [];
-        let now = new Date();
-        let timeNow = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-        let isValid = true;
-        rows.forEach(row => {
-            let rawDate = row.querySelector('.bulk-date').value;
-            let physicalCash = parseCleanNumber(row.querySelector('.bulk-cash').value);
-            let parking = parseCleanNumber(row.querySelector('.bulk-park').value);
-            let qris = parseCleanNumber(row.querySelector('.bulk-qris').value);
-            let debit = parseCleanNumber(row.querySelector('.bulk-debit').value);
-            let isCollected = row.querySelector('.bulk-status').value === 'true';
-
-            if (!rawDate) { isValid = false; return; }
-
-            let p = rawDate.split('-');
-            let finalDateStr = `${p[2]}/${p[1]}/${p[0]}`;
-            let collectionDateFormatted = isCollected ? `${p[2]}/${p[1]}/${p[0]} ${timeNow}` : '-';
-            let collectorName = isCollected ? 'Pusat (Input Massal)' : '-';
-            let computerOmset = debit + qris + physicalCash;
-
-            newRecords.push({
-                id: Date.now() + Math.random(),
-                storePoint: targetStore,
-                debit,
-                qris,
-                physicalCash,
-                parking,
-                computerOmset,
-                expenseDesc: '-',
-                isCollected,
-                collectorName,
-                collectionDate: collectionDateFormatted,
-                date: finalDateStr,
-                time: timeNow,
-                editHistory: []
-            });
         });
 
-        if (!isValid || newRecords.length === 0) {
-            alert('Mohon lengkapi tanggal pada semua baris input massal!');
-            return;
-        }
-
-        if (confirm(`Simpan ${newRecords.length} data laporan susulan untuk ${targetStore}?`)) {
-            newRecords.forEach(rec => allClosings.push(rec));
-
-            db.ref('store_closings').set(allClosings).then(() => {
-                alert(`Berhasil! ${newRecords.length} laporan untuk ${targetStore} berhasil tersimpan sekaligus.`);
-                document.getElementById('bulkRowsContainer').innerHTML = `
-                    <div class="bulk-input-row">
-                        <input type="date" class="bulk-date" required>
-                        <input type="text" class="bulk-cash" inputmode="numeric" placeholder="Permen Fisik" oninput="formatInputNumber(this)" required>
-                        <input type="text" class="bulk-park" inputmode="numeric" placeholder="Parkir" oninput="formatInputNumber(this)" required>
-                        <input type="text" class="bulk-qris" inputmode="numeric" placeholder="QRIS" oninput="formatInputNumber(this)" required>
-                        <input type="text" class="bulk-debit" inputmode="numeric" placeholder="Debit" oninput="formatInputNumber(this)" required>
-                        <select class="bulk-status">
-                            <option value="true">🟢 Diambil</option>
-                            <option value="false">🔴 Belum Diambil</option>
-                        </select>
-                        <button type="button" class="btn-del-row" onclick="removeBulkRow(this)" style="display:none;">✕</button>
-                    </div>
-                `;
-            });
-        }
-    }
-
-    function openEditModal(recordId) {
-        let rec = allClosings.find(i => i.id === recordId);
-        if (!rec) return;
-
-        document.getElementById('editRecordId').value = rec.id;
-        document.getElementById('editPhysicalCash').value = formatNumber(rec.physicalCash || 0);
-        document.getElementById('editParking').value = formatNumber(rec.parking || 0);
-        document.getElementById('editQris').value = formatNumber(rec.qris || 0);
-        document.getElementById('editDebit').value = formatNumber(rec.debit || 0);
-        
-        document.getElementById('editStatusPermen').value = rec.isCollected ? "true" : "false";
-        document.getElementById('editReasonInput').value = '';
-
-        document.getElementById('editModal').style.display = 'flex';
-    }
-
-    function submitEditRecord() {
-        let recordId = parseFloat(document.getElementById('editRecordId').value);
-        let newCash = parseCleanNumber(document.getElementById('editPhysicalCash').value);
-        let newPark = parseCleanNumber(document.getElementById('editParking').value);
-        let newQris = parseCleanNumber(document.getElementById('editQris').value);
-        let newDebit = parseCleanNumber(document.getElementById('editDebit').value);
-        
-        let isCollectedVal = document.getElementById('editStatusPermen').value === "true";
-        let reason = document.getElementById('editReasonInput').value.trim();
-
-        if (!reason) {
-            alert('Alasan mengedit laporan wajib diisi!');
-            return;
-        }
-
-        let rec = allClosings.find(i => i.id === recordId);
-        if (!rec) return;
-
-        let beforeSummary = `Permen: ${formatRp(rec.physicalCash)}, Parkir: ${formatRp(rec.parking)}, QRIS: ${formatRp(rec.qris)}, Debit: ${formatRp(rec.debit)}, Status: ${rec.isCollected ? 'Sudah Diambil' : 'Belum Diambil'}`;
-        let afterSummary = `Permen: ${formatRp(newCash)}, Parkir: ${formatRp(newPark)}, QRIS: ${formatRp(newQris)}, Debit: ${formatRp(newDebit)}, Status: ${isCollectedVal ? 'Sudah Diambil' : 'Belum Diambil'}`;
-
-        let now = new Date();
-        let editTimestamp = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
-        
-        let editLog = {
-            timestamp: editTimestamp,
-            reason: reason,
-            before: beforeSummary,
-            after: afterSummary
+        const newRecord = {
+            id: Date.now(),
+            storePoint,
+            date: indoDate,
+            time: timeStr,
+            debit,
+            qris,
+            physicalCash,
+            computerOmset,
+            parking,
+            expenseDesc: expParts.length > 0 ? expParts.join(' | ') : '-',
+            expenseTotal,
+            isCollected: false,
+            collectorName: '',
+            collectedAt: '',
+            bulkPickupId: ''
         };
 
-        allClosings = allClosings.map(item => {
-            if (item.id === recordId) {
-                let history = item.editHistory || [];
-                history.push(editLog);
-                let computerOmset = newDebit + newQris + newCash;
+        const updatedClosings = [...storeClosings, newRecord];
+        db.ref('store_closings').set(updatedClosings).then(() => {
+            document.getElementById('debitInput').value = '';
+            document.getElementById('qrisInput').value = '';
+            document.getElementById('physInput').value = '';
+            document.getElementById('parkingInput').value = '';
+            document.getElementById('expenseRowsContainer').innerHTML = '';
+            addExpenseRow();
+            calculateExpenseTotal();
+            alert(`Tutup buku ${storePoint} tanggal ${indoDate} berhasil disimpan!`);
+        }).catch(err => {
+            alert('Gagal menyimpan ke server: ' + err.message);
+        });
+    }
+
+    // ==========================================
+    // AMBIL MASAL PERMEN (PENARIKAN RUTIN)
+    // ==========================================
+    function renderUncollectedTable() {
+        if (!currentLoggedInStore) return;
+        const activeStore = currentLoggedInStore;
+        const tbody = document.getElementById('uncollectedClosingsBody');
+        if (!tbody) return;
+
+        const uncollected = storeClosings
+            .filter(i => normalizeStoreName(i.storePoint) === activeStore && !i.isCollected)
+            .sort((a, b) => parseIndoDateToMs(a.date) - parseIndoDateToMs(b.date));
+
+        if (uncollected.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">Semua laporan tutup buku di ${escapeHtml(activeStore)} sudah diambil.</td></tr>`;
+            updatePickupSelectionSummary();
+            return;
+        }
+
+        tbody.innerHTML = '';
+        uncollected.forEach(item => {
+            tbody.innerHTML += `
+                <tr>
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="pickup-item-checkbox"
+                            data-id="${item.id}"
+                            data-date="${escapeHtml(item.date)}"
+                            data-phys="${Number(item.physicalCash || 0)}"
+                            data-park="${Number(item.parking || 0)}"
+                            checked
+                            onchange="updatePickupSelectionSummary()">
+                    </td>
+                    <td><b>${escapeHtml(item.date)}</b> <span style="color: var(--text-muted); font-size: 0.82rem;">(${escapeHtml(item.time || '')})</span></td>
+                    <td class="nominal-center" style="font-weight: 700; color: #047857;">${formatRp(item.physicalCash || 0)}</td>
+                    <td class="nominal-center" style="color: var(--success); font-weight: 600;">${formatRp(item.parking || 0)}</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('masterCheckUncollected').checked = true;
+        updatePickupSelectionSummary();
+    }
+
+    function toggleSelectAllUncollected(forceState) {
+        const masterCb = document.getElementById('masterCheckUncollected');
+        const targetState = typeof forceState === 'boolean' ? forceState : !masterCb.checked;
+        masterCb.checked = targetState;
+        document.querySelectorAll('.pickup-item-checkbox').forEach(cb => {
+            cb.checked = targetState;
+        });
+        updatePickupSelectionSummary();
+    }
+
+    function updatePickupSelectionSummary() {
+        const checkedBoxes = Array.from(document.querySelectorAll('.pickup-item-checkbox:checked'));
+        if (checkedBoxes.length === 0) {
+            document.getElementById('previewPickupPeriod').innerText = '-';
+            document.getElementById('previewPickupCount').innerText = '0 Hari';
+            document.getElementById('previewPickupPermen').innerText = 'Rp 0';
+            document.getElementById('previewPickupParkir').innerText = 'Rp 0';
+            return;
+        }
+
+        let totalPermen = 0;
+        let totalParkir = 0;
+        const dates = [];
+
+        checkedBoxes.forEach(cb => {
+            totalPermen += Number(cb.dataset.phys || 0);
+            totalParkir += Number(cb.dataset.park || 0);
+            if (cb.dataset.date) dates.push(cb.dataset.date);
+        });
+
+        dates.sort((a, b) => parseIndoDateToMs(a) - parseIndoDateToMs(b));
+        const firstDate = dates[0];
+        const lastDate = dates[dates.length - 1];
+        const periodText = firstDate === lastDate ? firstDate : `${firstDate} s/d ${lastDate}`;
+
+        document.getElementById('previewPickupPeriod').innerText = periodText;
+        document.getElementById('previewPickupCount').innerText = `${checkedBoxes.length} Laporan`;
+        document.getElementById('previewPickupPermen').innerText = formatRp(totalPermen);
+        document.getElementById('previewPickupParkir').innerText = formatRp(totalParkir);
+    }
+
+    function processBulkPickup() {
+        if (!currentLoggedInStore) return;
+        const storePoint = currentLoggedInStore;
+        const collectorName = document.getElementById('bulkCollectorName').value.trim();
+        const dtLocal = document.getElementById('bulkPickupDateTime').value;
+        const pickupTimeStr = dateTimeLocalToIndo(dtLocal);
+
+        const checkedBoxes = Array.from(document.querySelectorAll('.pickup-item-checkbox:checked'));
+
+        if (!collectorName) {
+            alert('Nama pengambil wajib diisi (contoh: Pak Sentot)!');
+            document.getElementById('bulkCollectorName').focus();
+            return;
+        }
+        if (!pickupTimeStr) {
+            alert('Waktu pengambilan wajib diisi!');
+            return;
+        }
+        if (checkedBoxes.length === 0) {
+            alert('Pilih minimal satu tanggal tutup buku yang akan diambil!');
+            return;
+        }
+
+        localStorage.setItem('aww_last_collector', collectorName);
+
+        const selectedIds = checkedBoxes.map(cb => Number(cb.dataset.id));
+        const datesList = [];
+        let totalPermen = 0;
+        let totalParkir = 0;
+
+        checkedBoxes.forEach(cb => {
+            totalPermen += Number(cb.dataset.phys || 0);
+            totalParkir += Number(cb.dataset.park || 0);
+            if (cb.dataset.date) datesList.push(cb.dataset.date);
+        });
+
+        datesList.sort((a, b) => parseIndoDateToMs(a) - parseIndoDateToMs(b));
+        const startDate = datesList[0];
+        const endDate = datesList[datesList.length - 1];
+        const periodText = startDate === endDate ? startDate : `${startDate} s/d ${endDate}`;
+
+        const bulkPickupId = Date.now();
+
+        const updatedClosings = storeClosings.map(item => {
+            if (selectedIds.includes(Number(item.id))) {
                 return {
                     ...item,
-                    physicalCash: newCash,
-                    parking: newPark,
-                    qris: newQris,
-                    debit: newDebit,
-                    computerOmset,
-                    isCollected: isCollectedVal,
-                    collectorName: isCollectedVal ? (item.collectorName || 'Pusat (Ralat Owner)') : 'Pusat',
-                    collectionDate: isCollectedVal ? (item.collectionDate !== '-' ? item.collectionDate : editTimestamp) : '-',
-                    editHistory: history
+                    isCollected: true,
+                    collectorName: collectorName,
+                    collectedAt: pickupTimeStr,
+                    pickupTime: pickupTimeStr,
+                    bulkPickupId: bulkPickupId
                 };
             }
             return item;
         });
 
-        db.ref('store_closings').set(allClosings).then(() => {
-            alert('Laporan dan ralat status pengambilan permen berhasil disimpan!');
-            document.getElementById('editModal').style.display = 'none';
+        const newPickupBatch = {
+            id: bulkPickupId,
+            source: 'store_app_bulk',
+            storePoint: storePoint,
+            collectorName: collectorName,
+            startDate: startDate,
+            endDate: endDate,
+            periodText: periodText,
+            datesList: datesList,
+            datesCount: datesList.length,
+            pickupTime: pickupTimeStr,
+            physAmount: totalPermen,
+            parkAmount: totalParkir,
+            collectedClosingIds: selectedIds
+        };
+        const updatedPickups = [...storeBulkPickups, newPickupBatch];
+
+        const newAuditLog = {
+            id: bulkPickupId + 1,
+            time: pickupTimeStr,
+            storePoint: storePoint,
+            details: `Ambil Masal (${periodText}) | Pengambil: ${collectorName} | Nominal Permen: ${formatRp(totalPermen)}`
+        };
+        const updatedAuditLogs = [...storeAuditLogs, newAuditLog];
+
+        Promise.all([
+            db.ref('store_closings').set(updatedClosings),
+            db.ref('store_bulk_pickups').set(updatedPickups),
+            db.ref('store_audit_logs').set(updatedAuditLogs)
+        ]).then(() => {
+            showWaReportModal(newPickupBatch);
+        }).catch(err => {
+            alert('Gagal menyimpan pengambilan massal: ' + err.message);
         });
     }
 
-    function deleteRecord(recordId) {
-        if (!isPusatMode) {
-            alert('Akses ditolak! Hanya Master PIN yang dapat menghapus riwayat laporan.');
-            return;
-        }
-
-        if (confirm('⚠️ Apakah Anda yakin ingin menghapus permanen riwayat laporan ini?')) {
-            allClosings = allClosings.filter(item => item.id !== recordId);
-            db.ref('store_closings').set(allClosings).then(() => {
-                alert('Riwayat laporan berhasil dihapus!');
-            });
-        }
+    // ==========================================
+    // GENERATOR & MODAL LAPORAN WHATSAPP
+    // ==========================================
+    function buildWaPickupMessage(record) {
+        return `*PENGAMBILAN PERMEN*\n\n` +
+               `🏪 *Toko:* ${record.storePoint}\n` +
+               `📦 *Jenis:* Ambil Masal (Penarikan Rutin)\n` +
+               `👤 *Pengambil:* ${record.collectorName}\n` +
+               `💰 *Nominal Permen:* ${formatRp(record.physAmount)}\n` +
+               `📅 *Periode Permen:* ${record.periodText}\n` +
+               `⏰ *Waktu Ambil:* ${record.pickupTime}`;
     }
 
-    function openBulkCollectModal() {
-        document.getElementById('bulkCollectorName').value = '';
-        document.getElementById('bulkCollectionDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('bulkCollectionTime').value = new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}).replace('.', ':');
-        document.getElementById('bulkModal').style.display = 'flex';
+    function showWaReportModal(record) {
+        const waText = buildWaPickupMessage(record);
+        document.getElementById('waReportTextBox').innerText = waText;
+        document.getElementById('waDirectShareLink').href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+        document.getElementById('waReportModal').style.display = 'flex';
     }
 
-    function confirmBulkCollection() {
-        let name = document.getElementById('bulkCollectorName').value.trim();
-        let rawDate = document.getElementById('bulkCollectionDate').value;
-        let rawTime = document.getElementById('bulkCollectionTime').value.trim();
-
-        if (!name || !rawDate || !rawTime) { 
-            alert('Nama pengambil, tanggal, dan waktu pengambilan wajib diisi!'); 
-            return; 
-        }
-
-        let p = rawDate.split('-');
-        let formattedDate = `${p[2]}/${p[1]}/${p[0]} ${rawTime}`;
-        let cutoffTimestamp = new Date(`${rawDate}T${rawTime}`).getTime();
-
-        let updated = false;
-        let totalBulkAmount = 0;
-        let datesList = []; // Menyimpan objek tanggal agar bisa diurutkan kronologis
-
-        allClosings = allClosings.map(item => {
-            if (item.storePoint === currentStore && !item.isCollected) {
-                let itemDateStr = item.date; // format DD/MM/YYYY
-                if (itemDateStr) {
-                    let parts = itemDateStr.split('/');
-                    if (parts.length === 3) {
-                        let itemIsoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                        let itemTimeStr = (item.time || "00:00").replace('.', ':');
-                        let itemTimestamp = new Date(`${itemIsoDate}T${itemTimeStr}`).getTime();
-
-                        if (isNaN(itemTimestamp) || itemTimestamp <= cutoffTimestamp) {
-                            updated = true;
-                            totalBulkAmount += (item.physicalCash || 0);
-                            
-                            // Simpan timestamp beserta string tanggal asli untuk pengurutan akurat
-                            datesList.push({ timeVal: isNaN(itemTimestamp) ? 0 : itemTimestamp, dateStr: item.date });
-
-                            return { 
-                                ...item, 
-                                isCollected: true, 
-                                collectorName: name, 
-                                collectionDate: formattedDate 
-                            };
-                        }
-                    }
-                }
-            }
-            return item;
-        });
-
-        if (updated) {
-            db.ref('store_closings').set(allClosings).then(() => {
-                alert('Penarikan massal permen berhasil diproses!');
-                document.getElementById('bulkModal').style.display = 'none';
-
-                // Urutkan dari tanggal terdahulu ke tanggal terbaru
-                datesList.sort((a, b) => a.timeVal - b.timeVal);
-                let startDate = datesList.length > 0 ? datesList[0].dateStr : '-';
-                let endDate = datesList.length > 0 ? datesList[datesList.length - 1].dateStr : '-';
-
-                sendWhatsAppNotification(currentStore, name, totalBulkAmount, formattedDate, 'Ambil Masal (Penarikan Rutin)', startDate, endDate);
+    function copyWaReportText() {
+        const text = document.getElementById('waReportTextBox').innerText;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Laporan WA berhasil disalin!');
             });
         } else {
-            // Fallback aman: Ambil SEMUA sisa permen yang belum diambil di toko ini jika filter waktu kosong
-            if (confirm('Tidak ada data yang cocok dengan jam tersebut. Apakah Anda ingin mengambil SEMUA sisa permen yang belum diambil di toko ini?')) {
-                allClosings = allClosings.map(item => {
-                    if (item.storePoint === currentStore && !item.isCollected) {
-                        updated = true;
-                        totalBulkAmount += (item.physicalCash || 0);
-                        let itemTimestamp = 0;
-                        let parts = (item.date || "").split('/');
-                        if (parts.length === 3) {
-                            itemTimestamp = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
-                        }
-                        datesList.push({ timeVal: itemTimestamp, dateStr: item.date });
-
-                        return { 
-                            ...item, 
-                            isCollected: true, 
-                            collectorName: name, 
-                            collectionDate: formattedDate 
-                        };
-                    }
-                });
-
-                if (updated) {
-                    db.ref('store_closings').set(allClosings).then(() => {
-                        alert('Semua sisa permen berhasil ditarik!');
-                        document.getElementById('bulkModal').style.display = 'none';
-
-                        datesList.sort((a, b) => a.timeVal - b.timeVal);
-                        let startDate = datesList.length > 0 ? datesList[0].dateStr : '-';
-                        let endDate = datesList.length > 0 ? datesList[datesList.length - 1].dateStr : '-';
-
-                        sendWhatsAppNotification(currentStore, name, totalBulkAmount, formattedDate, 'Ambil Masal (Semua Sisa)', startDate, endDate);
-                    });
-                    return;
-                }
-            }
-            alert('Tidak ada permen tertinggal yang belum diambil di toko ini.');
-            document.getElementById('bulkModal').style.display = 'none';
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            alert('Laporan WA berhasil disalin!');
         }
     }
 
-    function renderHistory() {
-        let tbody = document.getElementById('historyTableBody');
-        tbody.innerHTML = '';
-        
-        let storeLogs = isPusatMode ? allClosings : allClosings.filter(i => i.storePoint === currentStore);
-        
-        if (storeLogs.length === 0) {
-            let colSpanVal = isPusatMode ? 9 : 8;
-            tbody.innerHTML = `<tr><td colspan="${colSpanVal}" style="text-align: center; color: #777;">Belum ada riwayat laporan.</td></tr>`;
+    // ==========================================
+    // RENDER TAB RIWAYAT TOKO
+    // ==========================================
+    function renderStorePickupHistory() {
+        if (!currentLoggedInStore) return;
+        const activeStore = currentLoggedInStore;
+        const tbody = document.getElementById('storePickupHistoryBody');
+        if (!tbody) return;
+
+        const filtered = storeBulkPickups
+            .filter(p => normalizeStoreName(p.storePoint) === activeStore)
+            .slice()
+            .sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 18px;">Belum ada riwayat pengambilan massal di ${escapeHtml(activeStore)}.</td></tr>`;
             return;
         }
 
-        storeLogs.sort((a, b) => {
-            let parseDateStr = (dStr) => {
-                if (!dStr) return 0;
-                let parts = dStr.split('/');
-                if (parts.length === 3) {
-                    return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
-                }
-                return 0;
-            };
-            return parseDateStr(b.date) - parseDateStr(a.date);
+        tbody.innerHTML = '';
+        filtered.forEach(rec => {
+            const periodStr = rec.periodText || (rec.startDate && rec.endDate ? `${rec.startDate} s/d ${rec.endDate}` : '-');
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${escapeHtml(rec.pickupTime || '-')}</b></td>
+                    <td><span class="badge badge-info">${escapeHtml(periodStr)}</span></td>
+                    <td><b>${escapeHtml(rec.collectorName || '-')}</b></td>
+                    <td class="nominal-center" style="font-weight: 800; color: #047857;">${formatRp(rec.physAmount || 0)}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="btn btn-outline btn-sm" onclick='showWaReportModal(${JSON.stringify({
+                            storePoint: normalizeStoreName(rec.storePoint),
+                            collectorName: rec.collectorName || '-',
+                            physAmount: Number(rec.physAmount || 0),
+                            periodText: periodStr,
+                            pickupTime: rec.pickupTime || '-'
+                        })})'>📋 Teks WA</button>
+                    </td>
+                </tr>
+            `;
         });
+    }
 
-        storeLogs.forEach(i => {
-            let status = i.isCollected ? 
-                `<span style="color: #2e7d32; font-size: 0.8rem;"><b>✔ Sudah Diambil</b><br>Oleh: ${i.collectorName || 'Pusat'}<br>(${i.collectionDate || '-'})</span>` : 
-                `<span style="color: #c62828; font-size: 0.8rem;"><b>❌ Belum Diambil</b></span>`;
+    function renderStoreClosingsHistory() {
+        if (!currentLoggedInStore) return;
+        const activeStore = currentLoggedInStore;
+        const tbody = document.getElementById('storeClosingsHistoryBody');
+        if (!tbody) return;
 
-            let expenseFormatted = '-';
-            if (i.expenseDesc && i.expenseDesc !== '-') {
-                let rawText = i.expenseDesc;
-                let expenses = rawText.includes('|') ? rawText.split('|').map(e => e.trim()) : rawText.split(',').map(e => e.trim());
-                expenseFormatted = `<div class="vertical-details">`;
-                expenses.forEach(exp => { if (exp) expenseFormatted += `<div>• ${exp}</div>`; });
-                expenseFormatted += `</div>`;
-            }
+        const filtered = storeClosings
+            .filter(i => normalizeStoreName(i.storePoint) === activeStore)
+            .slice()
+            .sort((a, b) => parseIndoDateToMs(b.date) - parseIndoDateToMs(a.date));
 
-            let editNoteHtml = '';
-            if (i.editHistory && i.editHistory.length > 0) {
-                editNoteHtml += `<div style="font-size: 0.75rem; color: #d84315; margin-top: 4px; border-top: 1px dashed #ffccbc; padding-top: 2px;"><b>Riwayat Edit / Ralat:</b><br>`;
-                i.editHistory.forEach(log => {
-                    editNoteHtml += `• <i>(${log.timestamp})</i><br>&nbsp;&nbsp;<b>Alasan:</b> ${log.reason}<br>&nbsp;&nbsp;<b>Sebelum:</b> ${log.before}<br>&nbsp;&nbsp;<b>Sesudah:</b> ${log.after}<br>`;
-                });
-                editNoteHtml += `</div>`;
-            }
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 18px;">Belum ada riwayat tutup buku untuk ${escapeHtml(activeStore)}.</td></tr>`;
+            return;
+        }
 
-            let actionTd = isPusatMode ? `<td>
-                <button class="btn-edit" onclick="openEditModal(${i.id})">✏️ Edit / Ralat</button>
-                <button class="btn-delete" onclick="deleteRecord(${i.id})">🗑️ Hapus</button>
-            </td>` : '';
+        tbody.innerHTML = '';
+        filtered.forEach(item => {
+            const statusHtml = item.isCollected
+                ? `<span class="badge badge-success">✔ Diambil (${escapeHtml(item.collectorName || 'Pusat')})</span>${item.collectedAt ? `<br><small style="color:var(--text-muted);">${escapeHtml(item.collectedAt)}</small>` : ''}`
+                : `<span class="badge badge-danger">⏳ Belum Diambil</span>`;
 
-            tbody.innerHTML += `<tr>
-                ${actionTd}
-                <td><b>${i.storePoint}</b></td>
-                <td>${i.date} ${i.time || ''}</td>
-                <td style="color: #2e7d32; font-weight: bold;">${formatRp(i.physicalCash || 0)}</td>
-                <td style="color: #00796b;">${formatRp(i.parking || 0)}</td>
-                <td style="color: #6a1b9a;">${formatRp(i.qris || 0)}</td>
-                <td style="color: #1565c0;">${formatRp(i.debit || 0)}</td>
-                <td>${expenseFormatted}</td>
-                <td>${status} ${editNoteHtml}</td>
-            </tr>`;
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${escapeHtml(item.date)}</b><br><small style="color: var(--text-muted);">${escapeHtml(item.time || '')}</small></td>
+                    <td class="nominal-center">${formatRp(item.debit || 0)}</td>
+                    <td class="nominal-center">${formatRp(item.qris || 0)}</td>
+                    <td class="nominal-center" style="font-weight: 700; color: #047857;">${formatRp(item.physicalCash || 0)}</td>
+                    <td class="nominal-center" style="max-width: 200px; font-size: 0.82rem; color: #475569;">${escapeHtml(item.expenseDesc || '-')}</td>
+                    <td class="nominal-center" style="color: var(--success); font-weight: 600;">${formatRp(item.parking || 0)}</td>
+                    <td>${statusHtml}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="btn btn-outline btn-sm" style="color: var(--danger);" onclick="requestDeleteStoreClosing(${item.id})">🗑️</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function requestDeleteStoreClosing(id) {
+        requestMasterPin('Hapus Laporan Tutup Buku', 'Masukkan Master PIN untuk menghapus laporan ini:', () => {
+            const updated = storeClosings.filter(i => Number(i.id) !== Number(id));
+            db.ref('store_closings').set(updated);
         });
     }
 </script>
