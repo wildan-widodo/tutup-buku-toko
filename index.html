@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Tutup Buku Toko AWW</title>
-    <meta name="app-version" content="3.3.1-hide-computer-omset">
+    <meta name="app-version" content="3.4.0-audit-trail-and-table-order">
 
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,7 +42,7 @@
 
         .nominal-center { text-align: center !important; }
 
-        .container { max-width: 1100px; margin: 0 auto; display: none; animation: fadeIn 0.3s ease-out; }
+        .container { max-width: 1180px; margin: 0 auto; display: none; animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         /* LOGIN PIN TOKO */
@@ -126,18 +126,18 @@
             border-radius: var(--radius-md); overflow: hidden; margin-bottom: 18px; background: #fff;
         }
         .cashier-entry-table th {
-            background: #f8fafc; padding: 12px 15px; font-size: 0.8rem; font-weight: 700;
+            background: #f8fafc; padding: 12px 15px; font-size: 0.82rem; font-weight: 700;
             color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border);
         }
         .cashier-entry-table td {
-            padding: 12px 15px; border-bottom: 1px solid var(--border); vertical-align: middle;
+            padding: 13px 15px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 0.95rem;
         }
         .cashier-entry-table tr:last-child td { border-bottom: none; }
         .cashier-entry-table .row-label {
-            font-weight: 700; font-size: 0.96rem; color: var(--text-main); width: 42%;
+            font-weight: 700; font-size: 0.98rem; color: var(--text-main); width: 40%;
         }
         .cashier-entry-table .row-sub {
-            display: block; font-size: 0.78rem; font-weight: 500; color: var(--text-muted); margin-top: 2px;
+            display: block; font-size: 0.82rem; font-weight: 500; color: var(--text-muted); margin-top: 2px;
         }
         .cashier-entry-table input.money-input {
             background: #f8fafc; border: 1px solid #cbd5e1; font-size: 1.12rem; padding: 11px 12px;
@@ -150,15 +150,21 @@
         .expense-row {
             display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 8px; margin-bottom: 8px; align-items: center;
         }
+        .expense-row .exp-name-input {
+            font-size: 0.96rem; padding: 11px 12px;
+        }
+        .expense-summary-text {
+            text-align: center; margin-top: 8px; font-weight: 700; color: var(--danger); font-size: 0.95rem;
+        }
         @media (max-width: 600px) {
-            .cashier-entry-table .row-label { width: 38%; font-size: 0.88rem; }
+            .cashier-entry-table .row-label { width: 38%; font-size: 0.9rem; }
             .expense-row { grid-template-columns: 1fr auto; }
             .expense-row input:first-child { grid-column: 1 / -1; }
         }
 
         /* BUTTONS */
         .btn {
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
             padding: 11px 18px; border-radius: 8px; font-weight: 600; font-size: 0.92rem;
             border: none; cursor: pointer; transition: 0.2s; text-decoration: none;
         }
@@ -170,19 +176,38 @@
         .btn-warning { background: var(--warning); color: #fff; }
         .btn-outline { background: #fff; border: 1px solid var(--border); color: var(--text-main); }
         .btn-outline:hover { background: #f8fafc; }
-        .btn-sm { padding: 6px 12px; font-size: 0.82rem; }
+        .btn-sm { padding: 6px 11px; font-size: 0.82rem; }
         .btn-block { width: 100%; padding: 14px; font-size: 1rem; }
 
         /* TABLES */
         .table-responsive { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); }
         table.data-table { width: 100%; border-collapse: collapse; text-align: left; }
-        table.data-table th, table.data-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.9rem; vertical-align: middle; }
-        table.data-table th { background: #f8fafc; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        table.data-table th, table.data-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.92rem; vertical-align: middle; }
+        table.data-table th { background: #f8fafc; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; }
         table.data-table tbody tr:hover { background: #f8fafc; }
 
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 700; }
+        /* KOLOM PENGELUARAN PADA TABEL RIWAYAT */
+        .expense-col-cell {
+            font-size: 0.92rem !important;
+            color: #1e293b;
+            min-width: 190px;
+            max-width: 280px;
+            line-height: 1.45;
+            font-weight: 500;
+        }
+
+        .action-btn-group {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
         .badge-success { background: var(--success-light); color: #065f46; }
         .badge-danger { background: var(--danger-light); color: #991b1b; }
+        .badge-warning { background: var(--warning-light); color: #92400e; }
         .badge-info { background: #e0e7ff; color: #3730a3; }
 
         /* PICKUP PREVIEW BOX */
@@ -199,6 +224,16 @@
         .pickup-preview-item span { display: block; font-size: 0.78rem; color: #065f46; font-weight: 600; text-align: center; }
         .pickup-preview-item strong { font-size: 1.08rem; color: #064e3b; font-weight: 800; display: block; text-align: center; margin-top: 2px; }
 
+        /* AUDIT REASON BOX */
+        .audit-mandatory-box {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-left: 4px solid var(--warning);
+            padding: 14px;
+            border-radius: 10px;
+            margin-top: 14px;
+        }
+
         /* MODAL */
         .modal {
             display: none; position: fixed; inset: 0; z-index: 100;
@@ -207,8 +242,11 @@
         }
         .modal-content {
             background: #fff; padding: 26px; border-radius: var(--radius-lg);
-            width: 100%; max-width: 480px; box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2);
-            max-height: 90vh; overflow-y: auto;
+            width: 100%; max-width: 520px; box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2);
+            max-height: 92vh; overflow-y: auto;
+        }
+        .modal-content.modal-lg {
+            max-width: 960px;
         }
         .wa-box {
             background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px;
@@ -249,8 +287,9 @@
 
     <div id="loginError" style="color: var(--danger); font-size: 0.84rem; margin-top: 12px; font-weight: 600;"></div>
 
-    <div style="margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--border);">
-        <button type="button" class="btn btn-outline btn-sm" onclick="requestManageStorePins()">⚙️ Kelola PIN Tiap Toko (Master PIN)</button>
+    <div style="margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--border); display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+        <button type="button" class="btn btn-outline btn-sm" onclick="requestManageStorePins()">⚙️ Kelola PIN Toko</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="requestOpenAuditTrail()">🛡️ Audit Trail</button>
     </div>
 </div>
 
@@ -266,6 +305,7 @@
             <p>Input Tutup Buku Harian & Penarikan Permen • Terhubung Pusat</p>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="requestOpenAuditTrail()">🛡️ Audit Trail</button>
             <button type="button" class="btn btn-outline btn-sm" onclick="requestManageStorePins()">⚙️ PIN Toko</button>
             <button type="button" class="btn btn-outline btn-sm" onclick="handleStoreLogout()">🔒 Keluar / Ganti Toko</button>
         </div>
@@ -362,11 +402,11 @@
                             <td class="row-label" style="vertical-align: top; padding-top: 16px;">
                                 💸 Pengeluaran
                                 <span class="row-sub">Gaji parkir, infak, plastik, dll</span>
-                                <button type="button" class="btn btn-outline btn-sm" onclick="addExpenseRow()" style="margin-top: 8px; border-color: #fca5a5; color: #b91c1c;">+ Tambah Item</button>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="addExpenseRow('expenseRowsContainer')" style="margin-top: 8px; border-color: #fca5a5; color: #b91c1c;">+ Tambah Item</button>
                             </td>
                             <td>
                                 <div id="expenseRowsContainer"></div>
-                                <div style="text-align: center; margin-top: 6px; font-weight: 700; color: var(--danger); font-size: 0.88rem;">
+                                <div class="expense-summary-text">
                                     Total Pengeluaran: <span id="previewDailyExpense">Rp 0</span>
                                 </div>
                             </td>
@@ -492,19 +532,20 @@
         <div class="card">
             <div class="card-header">
                 <h3>📋 Riwayat Tutup Buku Harian (<span id="historyClosingStoreLabel">AWW Sambi</span>)</h3>
+                <button type="button" class="btn btn-outline btn-sm" onclick="requestOpenAuditTrail()">🛡️ Lihat Audit Trail (Master PIN)</button>
             </div>
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Tanggal & Jam</th>
-                            <th class="nominal-center">Debit</th>
-                            <th class="nominal-center">QRIS</th>
-                            <th class="nominal-center">Fisik</th>
-                            <th class="nominal-center">Pengeluaran</th>
-                            <th class="nominal-center">Parkir</th>
-                            <th>Status Ambil</th>
                             <th style="text-align: center;">Aksi</th>
+                            <th>Tanggal &amp; Waktu</th>
+                            <th class="nominal-center">Fisik</th>
+                            <th class="nominal-center">Parkir</th>
+                            <th class="nominal-center">QRIS</th>
+                            <th class="nominal-center">Debit</th>
+                            <th class="nominal-center">Pengeluaran</th>
+                            <th>Status Ambil</th>
                         </tr>
                     </thead>
                     <tbody id="storeClosingsHistoryBody">
@@ -513,6 +554,178 @@
                 </table>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL EDIT SEMUA RINCIAN TUTUP BUKU
+     ========================================== -->
+<div class="modal" id="editClosingModal">
+    <div class="modal-content modal-lg" style="max-width: 660px;">
+        <h3 style="color: var(--primary); font-size: 1.22rem; margin-bottom: 4px;">✏️ Edit Rincian Tutup Buku (<span id="editStoreLabel">AWW Sambi</span>)</h3>
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 16px;">Perbarui rincian data di bawah ini. Nama kasir dan alasan perubahan wajib diisi untuk catatan Audit Trail.</p>
+
+        <form onsubmit="submitEditStoreClosing(event)">
+            <input type="hidden" id="editClosingId">
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label>📅 Tanggal Tutup Buku</label>
+                    <input type="date" id="editDateInput" required>
+                </div>
+                <div class="form-group">
+                    <label>⏰ Jam Tutup Buku</label>
+                    <input type="time" id="editTimeInput" required>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label>💵 Fisik (Permen)</label>
+                    <input type="text" id="editPhysInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)" required>
+                </div>
+                <div class="form-group">
+                    <label>🅿️ Parkir</label>
+                    <input type="text" id="editParkingInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)">
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label>📱 QRIS</label>
+                    <input type="text" id="editQrisInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)">
+                </div>
+                <div class="form-group">
+                    <label>💳 Debit / EDC</label>
+                    <input type="text" id="editDebitInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="margin-bottom: 0;">💸 Rincian Pengeluaran</label>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="addExpenseRow('editExpenseRowsContainer')" style="border-color: #fca5a5; color: #b91c1c;">+ Tambah Item</button>
+                </div>
+                <div id="editExpenseRowsContainer"></div>
+                <div class="expense-summary-text" style="text-align: left;">
+                    Total Pengeluaran: <span id="editPreviewDailyExpense">Rp 0</span>
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label>📦 Status Pengambilan</label>
+                    <select id="editIsCollectedSelect" onchange="toggleEditCollectorFields()">
+                        <option value="false">⏳ Belum Diambil</option>
+                        <option value="true">✔ Sudah Diambil</option>
+                    </select>
+                </div>
+                <div class="form-group" id="editCollectorNameGroup" style="display: none;">
+                    <label>👤 Nama Pengambil</label>
+                    <input type="text" id="editCollectorNameInput" placeholder="Contoh: Pak Sentot">
+                </div>
+            </div>
+
+            <!-- WAJIB NAMA KASIR & ALASAN UNTUK AUDIT TRAIL -->
+            <div class="audit-mandatory-box">
+                <div style="font-weight: 800; color: #92400e; font-size: 0.88rem; margin-bottom: 10px;">🛡️ Wajib Diisi (Tercatat Otomatis di Audit Trail)</div>
+                <div class="form-group">
+                    <label>🧑‍💼 Nama Kasir yang Melakukan Edit *</label>
+                    <input type="text" id="editCashierNameInput" placeholder="Masukkan nama lengkap kasir" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>📝 Alasan Perubahan Data *</label>
+                    <textarea id="editReasonInput" rows="2" placeholder="Contoh: Salah input nominal fisik dan tambahan pengeluaran plastik" required></textarea>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 18px;">
+                <button type="button" class="btn btn-outline" style="flex: 1;" onclick="document.getElementById('editClosingModal').style.display='none'">Batal</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL HAPUS TUTUP BUKU (WAJIB KASIR + ALASAN)
+     ========================================== -->
+<div class="modal" id="deleteClosingModal">
+    <div class="modal-content" style="max-width: 470px;">
+        <h3 style="color: var(--danger); font-size: 1.2rem; margin-bottom: 6px;">🗑️ Hapus Laporan Tutup Buku</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Data yang dihapus akan dicatat secara permanen di menu <b>Audit Trail</b>.</p>
+
+        <div id="deleteClosingSummaryBox" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 12px; font-size: 0.88rem; color: #7f1d1d; margin-bottom: 14px; line-height: 1.5;"></div>
+
+        <form onsubmit="submitDeleteStoreClosing(event)">
+            <input type="hidden" id="deleteClosingId">
+
+            <div class="audit-mandatory-box" style="margin-top: 0;">
+                <div class="form-group">
+                    <label>🧑‍💼 Nama Kasir yang Menghapus *</label>
+                    <input type="text" id="deleteCashierNameInput" placeholder="Masukkan nama lengkap kasir" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>📝 Alasan Penghapusan Data *</label>
+                    <textarea id="deleteReasonInput" rows="2" placeholder="Contoh: Data terinput ganda pada tanggal yang sama" required></textarea>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 18px;">
+                <button type="button" class="btn btn-outline" style="flex: 1;" onclick="document.getElementById('deleteClosingModal').style.display='none'">Batal</button>
+                <button type="submit" class="btn btn-danger" style="flex: 1;">🗑️ Hapus Permanen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODAL AUDIT TRAIL (KHUSUS MASTER PIN)
+     ========================================== -->
+<div class="modal" id="auditTrailModal">
+    <div class="modal-content modal-lg">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+            <div>
+                <h3 style="color: var(--primary); font-size: 1.25rem;">🛡️ Audit Trail Aktivitas Toko</h3>
+                <p style="font-size: 0.84rem; color: var(--text-muted);">Catatan otomatis seluruh aksi Edit, Hapus, dan Ambil Masal (Dilindungi Master PIN).</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <select id="auditStoreFilter" onchange="renderAuditTrailTable()" style="width: auto; padding: 8px 12px; font-size: 0.86rem; font-weight: 600;">
+                    <option value="ALL">Semua Titik Toko</option>
+                    <option value="AWW Sambi">AWW Sambi</option>
+                    <option value="AWW Beji">AWW Beji</option>
+                    <option value="AWW Bandung">AWW Bandung</option>
+                    <option value="AWW Trenggalek">AWW Trenggalek</option>
+                    <option value="AWW Ponorogo">AWW Ponorogo</option>
+                </select>
+                <select id="auditTypeFilter" onchange="renderAuditTrailTable()" style="width: auto; padding: 8px 12px; font-size: 0.86rem; font-weight: 600;">
+                    <option value="ALL">Semua Aktivitas</option>
+                    <option value="EDIT">Edit Data</option>
+                    <option value="DELETE">Hapus Data</option>
+                    <option value="PICKUP">Ambil Masal</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive" style="max-height: 60vh;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Waktu Aksi</th>
+                        <th>Toko</th>
+                        <th>Jenis</th>
+                        <th>Nama Kasir / Pelaku</th>
+                        <th>Alasan</th>
+                        <th>Rincian Perubahan / Data</th>
+                    </tr>
+                </thead>
+                <tbody id="auditTrailTableBody">
+                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Belum ada catatan audit trail.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <button type="button" class="btn btn-outline btn-block" style="margin-top: 16px;" onclick="document.getElementById('auditTrailModal').style.display='none'">Tutup Audit Trail</button>
     </div>
 </div>
 
@@ -655,6 +868,14 @@
         return `${p[2].padStart(2, '0')}/${p[1].padStart(2, '0')}/${p[0]}`;
     }
 
+    function indoDateToIso(indoDateStr) {
+        if (!indoDateStr || !indoDateStr.includes('/')) return '';
+        const clean = indoDateStr.trim().split(' ')[0];
+        const p = clean.split('/');
+        if (p.length < 3) return '';
+        return `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}`;
+    }
+
     function dateTimeLocalToIndo(dtLocalStr) {
         if (!dtLocalStr || !dtLocalStr.includes('T')) return '';
         const [dPart, tPart] = dtLocalStr.split('T');
@@ -681,6 +902,10 @@
         const hh = String(now.getHours()).padStart(2, '0');
         const min = String(now.getMinutes()).padStart(2, '0');
         return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+    }
+
+    function getCurrentIndoTimestamp() {
+        return dateTimeLocalToIndo(getCurrentDateTimeLocalValue());
     }
 
     // ==========================================
@@ -717,6 +942,9 @@
         db.ref('store_audit_logs').on('value', snap => {
             const raw = snap.val();
             storeAuditLogs = raw ? (Array.isArray(raw) ? raw.filter(Boolean) : Object.values(raw)) : [];
+            if (document.getElementById('auditTrailModal').style.display === 'flex') {
+                renderAuditTrailTable();
+            }
         });
     }
 
@@ -830,7 +1058,7 @@
 
         const expContainer = document.getElementById('expenseRowsContainer');
         if (expContainer && expContainer.children.length === 0) {
-            addExpenseRow();
+            addExpenseRow('expenseRowsContainer');
         }
 
         switchTab(1);
@@ -878,35 +1106,62 @@
     }
 
     // ==========================================
-    // FORM TUTUP BUKU HARIAN (URUTAN BARIS KASIR)
+    // FORM TUTUP BUKU HARIAN & HELPER PENGELUARAN
     // ==========================================
-    function addExpenseRow(name = '', amount = '') {
-        const container = document.getElementById('expenseRowsContainer');
+    function addExpenseRow(containerId = 'expenseRowsContainer', name = '', amount = '') {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const previewId = containerId === 'editExpenseRowsContainer' ? 'editPreviewDailyExpense' : 'previewDailyExpense';
         const row = document.createElement('div');
         row.className = 'expense-row';
         row.innerHTML = `
             <input type="text" class="exp-name-input" placeholder="Keperluan (misal: Gaji Parkir)" value="${escapeHtml(name)}">
-            <input type="text" class="exp-amount-input money-input" inputmode="numeric" placeholder="Nominal (Rp)" value="${amount}" oninput="onMoneyInput(this); calculateExpenseTotal()">
-            <button type="button" class="btn btn-danger btn-sm" onclick="removeExpenseRow(this)">✕</button>
+            <input type="text" class="exp-amount-input money-input" inputmode="numeric" placeholder="Nominal (Rp)" value="${amount}" oninput="onMoneyInput(this); calculateExpenseTotal('${containerId}', '${previewId}')">
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeExpenseRow(this, '${containerId}', '${previewId}')">✕</button>
         `;
         container.appendChild(row);
+        calculateExpenseTotal(containerId, previewId);
     }
 
-    function removeExpenseRow(btn) {
-        const container = document.getElementById('expenseRowsContainer');
+    function removeExpenseRow(btn, containerId = 'expenseRowsContainer', previewId = 'previewDailyExpense') {
+        const container = document.getElementById(containerId);
         btn.parentElement.remove();
-        if (container.children.length === 0) {
-            addExpenseRow();
+        if (container && container.children.length === 0) {
+            addExpenseRow(containerId);
         }
-        calculateExpenseTotal();
+        calculateExpenseTotal(containerId, previewId);
     }
 
-    function calculateExpenseTotal() {
+    function calculateExpenseTotal(containerId = 'expenseRowsContainer', previewId = 'previewDailyExpense') {
+        const container = document.getElementById(containerId);
+        const previewEl = document.getElementById(previewId);
+        if (!container || !previewEl) return;
         let totalExp = 0;
-        document.querySelectorAll('.exp-amount-input').forEach(inp => {
+        container.querySelectorAll('.exp-amount-input').forEach(inp => {
             totalExp += parseCleanNumber(inp.value);
         });
-        document.getElementById('previewDailyExpense').innerText = formatRp(totalExp);
+        previewEl.innerText = formatRp(totalExp);
+    }
+
+    function collectExpenseDataFromContainer(containerId) {
+        const container = document.getElementById(containerId);
+        const expParts = [];
+        let expenseTotal = 0;
+        if (container) {
+            container.querySelectorAll('.expense-row').forEach(row => {
+                const name = row.querySelector('.exp-name-input').value.trim();
+                const amt = parseCleanNumber(row.querySelector('.exp-amount-input').value);
+                if (amt > 0) {
+                    const label = name || 'Pengeluaran Toko';
+                    expParts.push(`${label} (Rp ${formatNumber(amt)})`);
+                    expenseTotal += amt;
+                }
+            });
+        }
+        return {
+            expenseDesc: expParts.length > 0 ? expParts.join(' | ') : '-',
+            expenseTotal
+        };
     }
 
     function saveStoreClosing(e) {
@@ -933,17 +1188,7 @@
             return;
         }
 
-        const expParts = [];
-        let expenseTotal = 0;
-        document.querySelectorAll('#expenseRowsContainer .expense-row').forEach(row => {
-            const name = row.querySelector('.exp-name-input').value.trim();
-            const amt = parseCleanNumber(row.querySelector('.exp-amount-input').value);
-            if (amt > 0) {
-                const label = name || 'Pengeluaran Toko';
-                expParts.push(`${label} (Rp ${formatNumber(amt)})`);
-                expenseTotal += amt;
-            }
-        });
+        const { expenseDesc, expenseTotal } = collectExpenseDataFromContainer('expenseRowsContainer');
 
         const newRecord = {
             id: Date.now(),
@@ -955,7 +1200,7 @@
             physicalCash,
             computerOmset,
             parking,
-            expenseDesc: expParts.length > 0 ? expParts.join(' | ') : '-',
+            expenseDesc,
             expenseTotal,
             isCollected: false,
             collectorName: '',
@@ -970,8 +1215,7 @@
             document.getElementById('physInput').value = '';
             document.getElementById('parkingInput').value = '';
             document.getElementById('expenseRowsContainer').innerHTML = '';
-            addExpenseRow();
-            calculateExpenseTotal();
+            addExpenseRow('expenseRowsContainer');
             alert(`Tutup buku ${storePoint} tanggal ${indoDate} berhasil disimpan!`);
         }).catch(err => {
             alert('Gagal menyimpan ke server: ' + err.message);
@@ -1140,7 +1384,10 @@
             id: bulkPickupId + 1,
             time: pickupTimeStr,
             storePoint: storePoint,
-            details: `Ambil Masal (${periodText}) | Pengambil: ${collectorName} | Nominal Permen: ${formatRp(totalPermen)}`
+            actionType: 'PICKUP',
+            cashierName: collectorName,
+            reason: 'Penarikan rutin permen toko',
+            details: `Ambil Masal (${periodText}) | Pengambil: ${collectorName} | Nominal Permen: ${formatRp(totalPermen)} | Parkir: ${formatRp(totalParkir)}`
         };
         const updatedAuditLogs = [...storeAuditLogs, newAuditLog];
 
@@ -1194,6 +1441,7 @@
 
     // ==========================================
     // RENDER TAB RIWAYAT TOKO
+    // URUTAN KOLOM: Aksi > Tanggal & Waktu > Fisik > Parkir > QRIS > Debit > Pengeluaran > Status Ambil
     // ==========================================
     function renderStorePickupHistory() {
         if (!currentLoggedInStore) return;
@@ -1234,6 +1482,13 @@
         });
     }
 
+    function formatExpenseColumnHtml(expenseDesc) {
+        const raw = String(expenseDesc || '').trim();
+        if (!raw || raw === '-') return '<span style="color: var(--text-muted);">-</span>';
+        const parts = raw.split('|').map(s => s.trim()).filter(Boolean);
+        return parts.map(part => `<div>• ${escapeHtml(part)}</div>`).join('');
+    }
+
     function renderStoreClosingsHistory() {
         if (!currentLoggedInStore) return;
         const activeStore = currentLoggedInStore;
@@ -1258,25 +1513,298 @@
 
             tbody.innerHTML += `
                 <tr>
-                    <td><b>${escapeHtml(item.date)}</b><br><small style="color: var(--text-muted);">${escapeHtml(item.time || '')}</small></td>
-                    <td class="nominal-center">${formatRp(item.debit || 0)}</td>
-                    <td class="nominal-center">${formatRp(item.qris || 0)}</td>
-                    <td class="nominal-center" style="font-weight: 700; color: #047857;">${formatRp(item.physicalCash || 0)}</td>
-                    <td class="nominal-center" style="max-width: 200px; font-size: 0.82rem; color: #475569;">${escapeHtml(item.expenseDesc || '-')}</td>
-                    <td class="nominal-center" style="color: var(--success); font-weight: 600;">${formatRp(item.parking || 0)}</td>
-                    <td>${statusHtml}</td>
                     <td style="text-align: center;">
-                        <button type="button" class="btn btn-outline btn-sm" style="color: var(--danger);" onclick="requestDeleteStoreClosing(${item.id})">🗑️</button>
+                        <div class="action-btn-group">
+                            <button type="button" class="btn btn-outline btn-sm" style="color: var(--primary); border-color: #c7d2fe;" onclick="openEditClosingModal(${item.id})">✏️ Edit</button>
+                            <button type="button" class="btn btn-outline btn-sm" style="color: var(--danger); border-color: #fecaca;" onclick="openDeleteClosingModal(${item.id})">🗑️ Hapus</button>
+                        </div>
                     </td>
+                    <td style="white-space: nowrap;"><b>${escapeHtml(item.date)}</b><br><small style="color: var(--text-muted);">${escapeHtml(item.time || '')}</small></td>
+                    <td class="nominal-center" style="font-weight: 700; color: #047857; white-space: nowrap;">${formatRp(item.physicalCash || 0)}</td>
+                    <td class="nominal-center" style="color: var(--success); font-weight: 600; white-space: nowrap;">${formatRp(item.parking || 0)}</td>
+                    <td class="nominal-center" style="white-space: nowrap;">${formatRp(item.qris || 0)}</td>
+                    <td class="nominal-center" style="white-space: nowrap;">${formatRp(item.debit || 0)}</td>
+                    <td class="expense-col-cell">${formatExpenseColumnHtml(item.expenseDesc)}</td>
+                    <td style="white-space: nowrap;">${statusHtml}</td>
                 </tr>
             `;
         });
     }
 
-    function requestDeleteStoreClosing(id) {
-        requestMasterPin('Hapus Laporan Tutup Buku', 'Masukkan Master PIN untuk menghapus laporan ini:', () => {
-            const updated = storeClosings.filter(i => Number(i.id) !== Number(id));
-            db.ref('store_closings').set(updated);
+    // ==========================================
+    // EDIT SEMUA RINCIAN TUTUP BUKU (WAJIB KASIR + ALASAN)
+    // ==========================================
+    function toggleEditCollectorFields() {
+        const isCol = document.getElementById('editIsCollectedSelect').value === 'true';
+        document.getElementById('editCollectorNameGroup').style.display = isCol ? 'block' : 'none';
+    }
+
+    function openEditClosingModal(id) {
+        const item = storeClosings.find(i => Number(i.id) === Number(id));
+        if (!item) return;
+
+        document.getElementById('editClosingId').value = item.id;
+        document.getElementById('editStoreLabel').innerText = normalizeStoreName(item.storePoint);
+        document.getElementById('editDateInput').value = indoDateToIso(item.date);
+        document.getElementById('editTimeInput').value = item.time || '21:00';
+        document.getElementById('editPhysInput').value = Number(item.physicalCash || 0) > 0 ? formatNumber(item.physicalCash) : '';
+        document.getElementById('editParkingInput').value = Number(item.parking || 0) > 0 ? formatNumber(item.parking) : '';
+        document.getElementById('editQrisInput').value = Number(item.qris || 0) > 0 ? formatNumber(item.qris) : '';
+        document.getElementById('editDebitInput').value = Number(item.debit || 0) > 0 ? formatNumber(item.debit) : '';
+
+        // Populate expense rows
+        const editExpContainer = document.getElementById('editExpenseRowsContainer');
+        editExpContainer.innerHTML = '';
+        const rawExp = String(item.expenseDesc || '').trim();
+        if (rawExp && rawExp !== '-') {
+            const parts = rawExp.split('|').map(s => s.trim()).filter(Boolean);
+            parts.forEach(part => {
+                const match = part.match(/^(.*?)\s*\(Rp\s*([\d.,]+)\)$/i);
+                if (match) {
+                    const amtNum = parseCleanNumber(match[2]);
+                    addExpenseRow('editExpenseRowsContainer', match[1].trim(), amtNum > 0 ? formatNumber(amtNum) : '');
+                } else {
+                    addExpenseRow('editExpenseRowsContainer', part, '');
+                }
+            });
+        } else {
+            addExpenseRow('editExpenseRowsContainer');
+        }
+        calculateExpenseTotal('editExpenseRowsContainer', 'editPreviewDailyExpense');
+
+        document.getElementById('editIsCollectedSelect').value = item.isCollected ? 'true' : 'false';
+        document.getElementById('editCollectorNameInput').value = item.collectorName || '';
+        toggleEditCollectorFields();
+
+        document.getElementById('editCashierNameInput').value = '';
+        document.getElementById('editReasonInput').value = '';
+
+        document.getElementById('editClosingModal').style.display = 'flex';
+    }
+
+    function submitEditStoreClosing(e) {
+        e.preventDefault();
+        const id = Number(document.getElementById('editClosingId').value);
+        const oldItem = storeClosings.find(i => Number(i.id) === id);
+        if (!oldItem) return;
+
+        const cashierName = document.getElementById('editCashierNameInput').value.trim();
+        const reason = document.getElementById('editReasonInput').value.trim();
+
+        if (!cashierName || !reason) {
+            alert('Nama kasir dan alasan perubahan wajib diisi!');
+            return;
+        }
+
+        const isoDate = document.getElementById('editDateInput').value;
+        const indoDate = isoDateToIndo(isoDate);
+        const timeStr = document.getElementById('editTimeInput').value || '21:00';
+        const physicalCash = parseCleanNumber(document.getElementById('editPhysInput').value);
+        const parking = parseCleanNumber(document.getElementById('editParkingInput').value);
+        const qris = parseCleanNumber(document.getElementById('editQrisInput').value);
+        const debit = parseCleanNumber(document.getElementById('editDebitInput').value);
+        const computerOmset = debit + qris + physicalCash;
+        const { expenseDesc, expenseTotal } = collectExpenseDataFromContainer('editExpenseRowsContainer');
+
+        const isCollected = document.getElementById('editIsCollectedSelect').value === 'true';
+        const collectorName = isCollected ? (document.getElementById('editCollectorNameInput').value.trim() || oldItem.collectorName || 'Pusat') : '';
+        const collectedAt = isCollected ? (oldItem.collectedAt || getCurrentIndoTimestamp()) : '';
+
+        // Catat detail perbandingan sebelum vs sesudah untuk Audit Trail
+        const diffs = [];
+        if (oldItem.date !== indoDate) diffs.push(`Tanggal: ${oldItem.date} → ${indoDate}`);
+        if ((oldItem.time || '') !== timeStr) diffs.push(`Jam: ${oldItem.time || '-'} → ${timeStr}`);
+        if (Number(oldItem.physicalCash || 0) !== physicalCash) diffs.push(`Fisik: ${formatRp(oldItem.physicalCash || 0)} → ${formatRp(physicalCash)}`);
+        if (Number(oldItem.parking || 0) !== parking) diffs.push(`Parkir: ${formatRp(oldItem.parking || 0)} → ${formatRp(parking)}`);
+        if (Number(oldItem.qris || 0) !== qris) diffs.push(`QRIS: ${formatRp(oldItem.qris || 0)} → ${formatRp(qris)}`);
+        if (Number(oldItem.debit || 0) !== debit) diffs.push(`Debit: ${formatRp(oldItem.debit || 0)} → ${formatRp(debit)}`);
+        if ((oldItem.expenseDesc || '-') !== expenseDesc) diffs.push(`Pengeluaran: "${oldItem.expenseDesc || '-'}" → "${expenseDesc}"`);
+        if (Boolean(oldItem.isCollected) !== isCollected || (oldItem.collectorName || '') !== collectorName) {
+            const oldSt = oldItem.isCollected ? `Diambil (${oldItem.collectorName || '-'})` : 'Belum Diambil';
+            const newSt = isCollected ? `Diambil (${collectorName})` : 'Belum Diambil';
+            diffs.push(`Status: ${oldSt} → ${newSt}`);
+        }
+
+        if (diffs.length === 0) {
+            alert('Belum ada perubahan nominal atau rincian yang dilakukan.');
+            return;
+        }
+
+        const updatedItem = {
+            ...oldItem,
+            date: indoDate,
+            time: timeStr,
+            physicalCash,
+            parking,
+            qris,
+            debit,
+            computerOmset,
+            expenseDesc,
+            expenseTotal,
+            isCollected,
+            collectorName,
+            collectedAt,
+            lastEditedBy: cashierName,
+            lastEditedReason: reason,
+            lastEditedAt: getCurrentIndoTimestamp()
+        };
+
+        const updatedClosings = storeClosings.map(i => Number(i.id) === id ? updatedItem : i);
+
+        const nowTs = getCurrentIndoTimestamp();
+        const auditEntry = {
+            id: Date.now(),
+            time: nowTs,
+            storePoint: normalizeStoreName(oldItem.storePoint),
+            actionType: 'EDIT',
+            cashierName: cashierName,
+            reason: reason,
+            details: `Edit Tutup Buku Tgl ${indoDate} | Perubahan: ${diffs.join('; ')}`
+        };
+        const updatedAuditLogs = [...storeAuditLogs, auditEntry];
+
+        Promise.all([
+            db.ref('store_closings').set(updatedClosings),
+            db.ref('store_audit_logs').set(updatedAuditLogs)
+        ]).then(() => {
+            document.getElementById('editClosingModal').style.display = 'none';
+            alert('Perubahan tutup buku berhasil disimpan dan tercatat di Audit Trail!');
+        }).catch(err => {
+            alert('Gagal menyimpan perubahan: ' + err.message);
+        });
+    }
+
+    // ==========================================
+    // HAPUS TUTUP BUKU (WAJIB KASIR + ALASAN)
+    // ==========================================
+    function openDeleteClosingModal(id) {
+        const item = storeClosings.find(i => Number(i.id) === Number(id));
+        if (!item) return;
+
+        document.getElementById('deleteClosingId').value = item.id;
+        document.getElementById('deleteCashierNameInput').value = '';
+        document.getElementById('deleteReasonInput').value = '';
+
+        document.getElementById('deleteClosingSummaryBox').innerHTML = `
+            <b>Toko:</b> ${escapeHtml(normalizeStoreName(item.storePoint))}<br>
+            <b>Tanggal &amp; Waktu:</b> ${escapeHtml(item.date)} (${escapeHtml(item.time || '-')})<br>
+            <b>Fisik:</b> ${formatRp(item.physicalCash || 0)} | <b>Parkir:</b> ${formatRp(item.parking || 0)}<br>
+            <b>QRIS:</b> ${formatRp(item.qris || 0)} | <b>Debit:</b> ${formatRp(item.debit || 0)}<br>
+            <b>Pengeluaran:</b> ${escapeHtml(item.expenseDesc || '-')}
+        `;
+
+        document.getElementById('deleteClosingModal').style.display = 'flex';
+    }
+
+    function submitDeleteStoreClosing(e) {
+        e.preventDefault();
+        const id = Number(document.getElementById('deleteClosingId').value);
+        const targetItem = storeClosings.find(i => Number(i.id) === id);
+        if (!targetItem) return;
+
+        const cashierName = document.getElementById('deleteCashierNameInput').value.trim();
+        const reason = document.getElementById('deleteReasonInput').value.trim();
+
+        if (!cashierName || !reason) {
+            alert('Nama kasir dan alasan penghapusan wajib diisi!');
+            return;
+        }
+
+        const updatedClosings = storeClosings.filter(i => Number(i.id) !== id);
+        const nowTs = getCurrentIndoTimestamp();
+
+        const auditEntry = {
+            id: Date.now(),
+            time: nowTs,
+            storePoint: normalizeStoreName(targetItem.storePoint),
+            actionType: 'DELETE',
+            cashierName: cashierName,
+            reason: reason,
+            details: `Hapus Tutup Buku Tgl ${targetItem.date} (${targetItem.time || '-'}) | Data Dihapus: Fisik ${formatRp(targetItem.physicalCash || 0)}, Parkir ${formatRp(targetItem.parking || 0)}, QRIS ${formatRp(targetItem.qris || 0)}, Debit ${formatRp(targetItem.debit || 0)}, Pengeluaran: ${targetItem.expenseDesc || '-'}`
+        };
+        const updatedAuditLogs = [...storeAuditLogs, auditEntry];
+
+        Promise.all([
+            db.ref('store_closings').set(updatedClosings),
+            db.ref('store_audit_logs').set(updatedAuditLogs)
+        ]).then(() => {
+            document.getElementById('deleteClosingModal').style.display = 'none';
+            alert('Data tutup buku dihapus dan aktivitas telah dicatat di Audit Trail!');
+        }).catch(err => {
+            alert('Gagal menghapus data: ' + err.message);
+        });
+    }
+
+    // ==========================================
+    // MENU AUDIT TRAIL (HANYA BISA DIAKSES MASTER PIN)
+    // ==========================================
+    function requestOpenAuditTrail() {
+        requestMasterPin(
+            'Akses Menu Audit Trail',
+            'Masukkan Master PIN pusat untuk melihat riwayat perubahan & penghapusan data:',
+            () => {
+                if (currentLoggedInStore) {
+                    document.getElementById('auditStoreFilter').value = currentLoggedInStore;
+                } else {
+                    document.getElementById('auditStoreFilter').value = 'ALL';
+                }
+                document.getElementById('auditTypeFilter').value = 'ALL';
+                renderAuditTrailTable();
+                document.getElementById('auditTrailModal').style.display = 'flex';
+            }
+        );
+    }
+
+    function detectAuditActionType(log) {
+        if (log.actionType) return String(log.actionType).toUpperCase();
+        const det = String(log.details || '').toLowerCase();
+        if (det.startsWith('edit')) return 'EDIT';
+        if (det.startsWith('hapus')) return 'DELETE';
+        if (det.startsWith('ambil')) return 'PICKUP';
+        return 'INFO';
+    }
+
+    function renderAuditTrailTable() {
+        const tbody = document.getElementById('auditTrailTableBody');
+        if (!tbody) return;
+
+        const storeFilter = document.getElementById('auditStoreFilter').value;
+        const typeFilter = document.getElementById('auditTypeFilter').value;
+
+        const filtered = storeAuditLogs
+            .filter(log => {
+                const st = normalizeStoreName(log.storePoint);
+                const tp = detectAuditActionType(log);
+                if (storeFilter !== 'ALL' && st !== storeFilter) return false;
+                if (typeFilter !== 'ALL' && tp !== typeFilter) return false;
+                return true;
+            })
+            .slice()
+            .sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Tidak ada catatan audit trail yang sesuai filter.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        filtered.forEach(log => {
+            const tp = detectAuditActionType(log);
+            let badgeHtml = `<span class="badge badge-info">AKTIVITAS</span>`;
+            if (tp === 'EDIT') badgeHtml = `<span class="badge badge-warning">✏️ EDIT DATA</span>`;
+            else if (tp === 'DELETE') badgeHtml = `<span class="badge badge-danger">🗑️ HAPUS DATA</span>`;
+            else if (tp === 'PICKUP') badgeHtml = `<span class="badge badge-success">📦 AMBIL MASAL</span>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="white-space: nowrap;"><b>${escapeHtml(log.time || '-')}</b></td>
+                    <td style="white-space: nowrap;"><b>${escapeHtml(normalizeStoreName(log.storePoint || '-'))}</b></td>
+                    <td style="white-space: nowrap;">${badgeHtml}</td>
+                    <td><b>${escapeHtml(log.cashierName || '-')}</b></td>
+                    <td style="min-width: 160px; color: #334155;">${escapeHtml(log.reason || '-')}</td>
+                    <td style="min-width: 240px; font-size: 0.88rem; line-height: 1.45; color: #0f172a;">${escapeHtml(log.details || '-')}</td>
+                </tr>
+            `;
         });
     }
 </script>
