@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Tutup Buku Toko AWW</title>
-    <meta name="app-version" content="3.4.0-audit-trail-and-table-order">
+    <meta name="app-version" content="3.5.0-full-sync-and-store-closing-enhancements">
 
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -66,8 +66,16 @@
             margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
             box-shadow: 0 10px 20px rgba(79, 70, 229, 0.18);
         }
-        .app-header h1 { font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .app-header h1 { font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .app-header p { font-size: 0.85rem; opacity: 0.88; margin-top: 2px; }
+
+        .conn-pill {
+            display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700;
+            padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); color: #fff;
+        }
+        .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; }
+        .conn-pill.online .conn-dot { background: #34d399; }
+        .conn-pill.offline .conn-dot { background: #f87171; }
 
         /* NAV TABS */
         .nav-tabs {
@@ -106,24 +114,25 @@
 
         /* FORMS */
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 16px; }
         @media (max-width: 768px) {
-            .form-grid-2 { grid-template-columns: 1fr; }
+            .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
             .nav-tab-btn { font-size: 0.8rem; padding: 10px 6px; }
         }
 
         .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 0.88rem; font-weight: 600; color: #334155; margin-bottom: 6px; }
-        input[type="text"], input[type="date"], input[type="time"], input[type="datetime-local"], input[type="password"], select, textarea {
+        input[type="text"], input[type="date"], input[type="time"], input[type="month"], input[type="datetime-local"], input[type="password"], select, textarea {
             width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px;
             font-size: 0.98rem; color: var(--text-main); background: #fff; outline: none; transition: 0.2s;
         }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); }
         .money-input { font-weight: 700; text-align: center; font-size: 1.08rem; }
 
-        /* TABEL PENGISIAN NOMINAL KASIR (BARIS PER BARIS FAMILIAR) */
+        /* TABEL PENGISIAN NOMINAL KASIR */
         .cashier-entry-table {
             width: 100%; border-collapse: collapse; border: 1px solid var(--border);
-            border-radius: var(--radius-md); overflow: hidden; margin-bottom: 18px; background: #fff;
+            border-radius: var(--radius-md); overflow: hidden; margin-bottom: 16px; background: #fff;
         }
         .cashier-entry-table th {
             background: #f8fafc; padding: 12px 15px; font-size: 0.82rem; font-weight: 700;
@@ -145,6 +154,23 @@
         .cashier-entry-table input.money-input:focus {
             background: #fff; border-color: var(--primary);
         }
+
+        /* LIVE SUMMARY FORM BOX */
+        .closing-live-summary {
+            background: #eef2ff; border: 1px solid #c7d2fe; border-left: 5px solid var(--primary);
+            border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 18px;
+        }
+        .closing-live-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;
+        }
+        @media (max-width: 640px) {
+            .closing-live-grid { grid-template-columns: 1fr; }
+        }
+        .closing-live-item {
+            background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e0e7ff;
+        }
+        .closing-live-item span { display: block; font-size: 0.76rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .closing-live-item strong { display: block; font-size: 1.1rem; font-weight: 800; margin-top: 2px; }
 
         /* EXPENSE ROWS INSIDE TABLE */
         .expense-row {
@@ -168,6 +194,7 @@
             padding: 11px 18px; border-radius: 8px; font-weight: 600; font-size: 0.92rem;
             border: none; cursor: pointer; transition: 0.2s; text-decoration: none;
         }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-primary { background: var(--primary); color: #fff; }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-success { background: var(--success); color: #fff; }
@@ -179,6 +206,25 @@
         .btn-sm { padding: 6px 11px; font-size: 0.82rem; }
         .btn-block { width: 100%; padding: 14px; font-size: 1rem; }
 
+        /* FILTER & SUBTOTAL BAR IN HISTORY */
+        .history-filter-bar {
+            display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px;
+            background: #f8fafc; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border);
+        }
+        .history-filter-bar input[type="month"], .history-filter-bar select {
+            width: auto; min-width: 165px; padding: 8px 12px; font-size: 0.88rem; font-weight: 600;
+        }
+        .history-subtotal-strip {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;
+            margin-bottom: 16px;
+        }
+        .subtotal-chip {
+            background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;
+            padding: 10px 12px; text-align: center;
+        }
+        .subtotal-chip span { display: block; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .subtotal-chip strong { display: block; font-size: 0.98rem; font-weight: 800; margin-top: 2px; }
+
         /* TABLES */
         .table-responsive { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-md); }
         table.data-table { width: 100%; border-collapse: collapse; text-align: left; }
@@ -186,9 +232,8 @@
         table.data-table th { background: #f8fafc; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; }
         table.data-table tbody tr:hover { background: #f8fafc; }
 
-        /* KOLOM PENGELUARAN PADA TABEL RIWAYAT */
         .expense-col-cell {
-            font-size: 0.92rem !important;
+            font-size: 0.9rem !important;
             color: #1e293b;
             min-width: 190px;
             max-width: 280px;
@@ -301,7 +346,10 @@
     <!-- HEADER -->
     <div class="app-header">
         <div>
-            <h1>🏪 <span id="headerStoreName">AWW Sambi</span></h1>
+            <h1>
+                🏪 <span id="headerStoreName">AWW Sambi</span>
+                <span class="conn-pill" id="firebaseConnBadge"><span class="conn-dot"></span><span id="firebaseConnText">Menghubungkan...</span></span>
+            </h1>
             <p>Input Tutup Buku Harian & Penarikan Permen • Terhubung Pusat</p>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -311,7 +359,7 @@
         </div>
     </div>
 
-    <!-- RINGKASAN SALDO DI TOKO SAAT INI (NOMINAL DI TENGAH) -->
+    <!-- RINGKASAN SALDO DI TOKO SAAT INI -->
     <div class="stat-grid">
         <div class="stat-box" style="border-top: 4px solid var(--danger);">
             <span>Permen Fisik (Belum Diambil)</span>
@@ -335,7 +383,7 @@
     </div>
 
     <!-- ==========================================
-         TAB 1: INPUT TUTUP BUKU HARIAN (URUTAN BARIS FAMILIAR)
+         TAB 1: INPUT TUTUP BUKU HARIAN
          ========================================== -->
     <div class="tab-panel active" id="tabPanel1">
         <div class="card">
@@ -344,7 +392,7 @@
             </div>
 
             <form id="closingForm" onsubmit="saveStoreClosing(event)">
-                <div class="form-grid-2">
+                <div class="form-grid-3">
                     <div class="form-group">
                         <label>📅 Tanggal Tutup Buku</label>
                         <input type="date" id="closingDateInput" required>
@@ -352,6 +400,10 @@
                     <div class="form-group">
                         <label>⏰ Jam Tutup Buku</label>
                         <input type="time" id="closingTimeInput" required>
+                    </div>
+                    <div class="form-group">
+                        <label>🧑‍💼 Nama Kasir Pelapor</label>
+                        <input type="text" id="closingCashierInput" placeholder="Contoh: Mbak Rani" required>
                     </div>
                 </div>
 
@@ -371,7 +423,7 @@
                                 <span class="row-sub">Total struk mesin EDC</span>
                             </td>
                             <td>
-                                <input type="text" id="debitInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)">
+                                <input type="text" id="debitInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this); updateDailyClosingPreview()">
                             </td>
                         </tr>
 
@@ -382,7 +434,7 @@
                                 <span class="row-sub">Total pembayaran scan QRIS</span>
                             </td>
                             <td>
-                                <input type="text" id="qrisInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)">
+                                <input type="text" id="qrisInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this); updateDailyClosingPreview()">
                             </td>
                         </tr>
 
@@ -393,7 +445,7 @@
                                 <span class="row-sub">Uang tunai hasil penjualan</span>
                             </td>
                             <td>
-                                <input type="text" id="physInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)" required>
+                                <input type="text" id="physInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this); updateDailyClosingPreview()" required>
                             </td>
                         </tr>
 
@@ -419,13 +471,31 @@
                                 <span class="row-sub">Total setoran parkir harian</span>
                             </td>
                             <td>
-                                <input type="text" id="parkingInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this)" style="border-color: #6ee7b7; color: #065f46;">
+                                <input type="text" id="parkingInput" class="money-input" inputmode="numeric" placeholder="0" oninput="onMoneyInput(this); updateDailyClosingPreview()" style="border-color: #6ee7b7; color: #065f46;">
                             </td>
                         </tr>
                     </tbody>
                 </table>
 
-                <button type="submit" class="btn btn-primary btn-block">💾 Simpan Tutup Buku Harian</button>
+                <!-- RINGKASAN OTOMATIS SEBELUM SIMPAN -->
+                <div class="closing-live-summary">
+                    <div class="closing-live-grid">
+                        <div class="closing-live-item">
+                            <span>Total Omset (Debit+QRIS+Fisik)</span>
+                            <strong id="previewTotalOmset" style="color: var(--primary);">Rp 0</strong>
+                        </div>
+                        <div class="closing-live-item">
+                            <span>Total Setoran (Fisik + Parkir)</span>
+                            <strong id="previewTotalSetoran" style="color: #047857;">Rp 0</strong>
+                        </div>
+                        <div class="closing-live-item">
+                            <span>Total Pengeluaran Toko</span>
+                            <strong id="previewSummaryExpense" style="color: var(--danger);">Rp 0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="btnSaveClosing" class="btn btn-primary btn-block">💾 Simpan Tutup Buku Harian</button>
             </form>
         </div>
     </div>
@@ -495,7 +565,7 @@
                 </div>
             </div>
 
-            <button type="button" class="btn btn-success btn-block" style="margin-top: 18px;" onclick="processBulkPickup()">
+            <button type="button" id="btnProcessPickup" class="btn btn-success btn-block" style="margin-top: 18px;" onclick="processBulkPickup()">
                 ✅ Simpan Ambil Masal & Buat Laporan WA
             </button>
         </div>
@@ -518,7 +588,7 @@
                             <th>Periode Permen</th>
                             <th>Pengambil</th>
                             <th class="nominal-center">Nominal Permen</th>
-                            <th style="text-align: center;">Laporan WA</th>
+                            <th style="text-align: center;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="storePickupHistoryBody">
@@ -534,6 +604,41 @@
                 <h3>📋 Riwayat Tutup Buku Harian (<span id="historyClosingStoreLabel">AWW Sambi</span>)</h3>
                 <button type="button" class="btn btn-outline btn-sm" onclick="requestOpenAuditTrail()">🛡️ Lihat Audit Trail (Master PIN)</button>
             </div>
+
+            <!-- FILTER & SUBTOTAL -->
+            <div class="history-filter-bar">
+                <input type="month" id="historyMonthFilter" onchange="renderStoreClosingsHistory()">
+                <select id="historyStatusFilter" onchange="renderStoreClosingsHistory()">
+                    <option value="ALL">Semua Status Ambil</option>
+                    <option value="UNCOLLECTED">⏳ Belum Diambil</option>
+                    <option value="COLLECTED">✔ Sudah Diambil</option>
+                </select>
+                <button type="button" class="btn btn-outline btn-sm" onclick="resetHistoryFilters()">🔄 Tampilkan Semua</button>
+            </div>
+
+            <div class="history-subtotal-strip">
+                <div class="subtotal-chip">
+                    <span>Total Fisik</span>
+                    <strong id="subHistoryPhys" style="color: #047857;">Rp 0</strong>
+                </div>
+                <div class="subtotal-chip">
+                    <span>Total Parkir</span>
+                    <strong id="subHistoryPark" style="color: var(--success);">Rp 0</strong>
+                </div>
+                <div class="subtotal-chip">
+                    <span>Total QRIS</span>
+                    <strong id="subHistoryQris" style="color: var(--primary);">Rp 0</strong>
+                </div>
+                <div class="subtotal-chip">
+                    <span>Total Debit</span>
+                    <strong id="subHistoryDebit" style="color: var(--text-main);">Rp 0</strong>
+                </div>
+                <div class="subtotal-chip">
+                    <span>Total Pengeluaran</span>
+                    <strong id="subHistoryExpense" style="color: var(--danger);">Rp 0</strong>
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
@@ -680,6 +785,38 @@
 </div>
 
 <!-- ==========================================
+     MODAL BATAL / HAPUS AMBIL MASAL (MASTER PIN + ALASAN)
+     ========================================== -->
+<div class="modal" id="cancelPickupModal">
+    <div class="modal-content" style="max-width: 470px;">
+        <h3 style="color: var(--danger); font-size: 1.2rem; margin-bottom: 6px;">🔙 Batalkan Pengambilan Masal</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Status laporan tutup buku pada periode ini akan dikembalikan menjadi <b>Belum Diambil</b> dan tercatat di Audit Trail.</p>
+
+        <div id="cancelPickupSummaryBox" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 12px; font-size: 0.88rem; color: #7f1d1d; margin-bottom: 14px; line-height: 1.5;"></div>
+
+        <form onsubmit="submitCancelBulkPickup(event)">
+            <input type="hidden" id="cancelPickupId">
+
+            <div class="audit-mandatory-box" style="margin-top: 0;">
+                <div class="form-group">
+                    <label>🧑‍💼 Nama Kasir / Pengambil yang Membatalkan *</label>
+                    <input type="text" id="cancelPickupActorInput" placeholder="Masukkan nama lengkap" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>📝 Alasan Pembatalan Pengambilan *</label>
+                    <textarea id="cancelPickupReasonInput" rows="2" placeholder="Contoh: Salah centang tanggal tutup buku" required></textarea>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 18px;">
+                <button type="button" class="btn btn-outline" style="flex: 1;" onclick="document.getElementById('cancelPickupModal').style.display='none'">Batal</button>
+                <button type="submit" class="btn btn-danger" style="flex: 1;">🔙 Ya, Batalkan Penarikan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================
      MODAL AUDIT TRAIL (KHUSUS MASTER PIN)
      ========================================== -->
 <div class="modal" id="auditTrailModal">
@@ -703,6 +840,7 @@
                     <option value="EDIT">Edit Data</option>
                     <option value="DELETE">Hapus Data</option>
                     <option value="PICKUP">Ambil Masal</option>
+                    <option value="DELETE_PICKUP">Batal Ambil Masal</option>
                 </select>
             </div>
         </div>
@@ -732,8 +870,8 @@
 <!-- MODAL LAPORAN WHATSAPP SIAP SALIN -->
 <div class="modal" id="waReportModal">
     <div class="modal-content">
-        <h3 style="color: #047857; font-size: 1.2rem; margin-bottom: 4px;">✅ Pengambilan Tersimpan!</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted);">Data sudah masuk ke aplikasi pusat. Silakan salin atau kirim laporan di bawah ini ke grup WhatsApp:</p>
+        <h3 id="waModalTitle" style="color: #047857; font-size: 1.2rem; margin-bottom: 4px;">✅ Laporan Tersimpan!</h3>
+        <p id="waModalDesc" style="font-size: 0.85rem; color: var(--text-muted);">Data sudah tersinkron ke aplikasi pusat. Silakan salin atau kirim laporan di bawah ini ke grup WhatsApp:</p>
         <div class="wa-box" id="waReportTextBox"></div>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button type="button" class="btn btn-primary" style="flex: 1;" onclick="copyWaReportText()">📋 Salin Teks WA</button>
@@ -811,7 +949,6 @@
 
     const storeNames = ['AWW Sambi', 'AWW Beji', 'AWW Bandung', 'AWW Trenggalek', 'AWW Ponorogo'];
 
-    // PIN unik default per toko (bisa diubah & otomatis tersinkron ke Firebase store_pins)
     let storePins = {
         'AWW Sambi': '1111',
         'AWW Beji': '2222',
@@ -826,6 +963,10 @@
     let storeBulkPickups = [];
     let storeAuditLogs = [];
     let pendingMasterPinAction = null;
+
+    let isClosingsSynced = false;
+    let isPickupsSynced = false;
+    let isAuditsSynced = false;
 
     // ==========================================
     // HELPER FORMAT ANGKA & TANGGAL
@@ -860,6 +1001,11 @@
         const raw = String(name || '').trim();
         const found = storeNames.find(s => s.toLowerCase() === raw.toLowerCase());
         return found || raw;
+    }
+
+    function normalizeFirebaseList(raw) {
+        if (!raw) return [];
+        return Array.isArray(raw) ? raw.filter(Boolean) : Object.values(raw).filter(Boolean);
     }
 
     function isoDateToIndo(isoDateStr) {
@@ -916,6 +1062,19 @@
             auth.signInAnonymously().catch(() => {});
         }
 
+        db.ref('.info/connected').on('value', snap => {
+            const pill = document.getElementById('firebaseConnBadge');
+            const text = document.getElementById('firebaseConnText');
+            if (!pill || !text) return;
+            if (snap.val() === true) {
+                pill.className = 'conn-pill online';
+                text.innerText = 'Terhubung Pusat';
+            } else {
+                pill.className = 'conn-pill offline';
+                text.innerText = 'Offline / Menyambung...';
+            }
+        });
+
         db.ref('vaults_data/masterPin').on('value', snap => {
             if (snap.val()) masterPin = String(snap.val());
         });
@@ -928,20 +1087,20 @@
         });
 
         db.ref('store_closings').on('value', snap => {
-            const raw = snap.val();
-            storeClosings = raw ? (Array.isArray(raw) ? raw.filter(Boolean) : Object.values(raw)) : [];
+            storeClosings = normalizeFirebaseList(snap.val());
+            isClosingsSynced = true;
             if (currentLoggedInStore) refreshStoreViews();
         });
 
         db.ref('store_bulk_pickups').on('value', snap => {
-            const raw = snap.val();
-            storeBulkPickups = raw ? (Array.isArray(raw) ? raw.filter(Boolean) : Object.values(raw)) : [];
+            storeBulkPickups = normalizeFirebaseList(snap.val());
+            isPickupsSynced = true;
             if (currentLoggedInStore) renderStorePickupHistory();
         });
 
         db.ref('store_audit_logs').on('value', snap => {
-            const raw = snap.val();
-            storeAuditLogs = raw ? (Array.isArray(raw) ? raw.filter(Boolean) : Object.values(raw)) : [];
+            storeAuditLogs = normalizeFirebaseList(snap.val());
+            isAuditsSynced = true;
             if (document.getElementById('auditTrailModal').style.display === 'flex') {
                 renderAuditTrailTable();
             }
@@ -1050,6 +1209,13 @@
         document.getElementById('closingDateInput').value = `${yyyy}-${mm}-${dd}`;
         document.getElementById('closingTimeInput').value = `${hh}:${min}`;
         document.getElementById('bulkPickupDateTime').value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+        document.getElementById('historyMonthFilter').value = `${yyyy}-${mm}`;
+        document.getElementById('historyStatusFilter').value = 'ALL';
+
+        const savedCashier = localStorage.getItem(`aww_last_cashier_${currentLoggedInStore}`);
+        if (savedCashier) {
+            document.getElementById('closingCashierInput').value = savedCashier;
+        }
 
         const savedCollector = localStorage.getItem('aww_last_collector');
         if (savedCollector) {
@@ -1061,6 +1227,7 @@
             addExpenseRow('expenseRowsContainer');
         }
 
+        updateDailyClosingPreview();
         switchTab(1);
         refreshStoreViews();
     }
@@ -1073,6 +1240,9 @@
         if (tabNum === 2) {
             document.getElementById('bulkPickupDateTime').value = getCurrentDateTimeLocalValue();
             renderUncollectedTable();
+        } else if (tabNum === 3) {
+            renderStorePickupHistory();
+            renderStoreClosingsHistory();
         }
     }
 
@@ -1141,6 +1311,24 @@
             totalExp += parseCleanNumber(inp.value);
         });
         previewEl.innerText = formatRp(totalExp);
+        if (containerId === 'expenseRowsContainer') {
+            updateDailyClosingPreview();
+        }
+    }
+
+    function updateDailyClosingPreview() {
+        const debit = parseCleanNumber(document.getElementById('debitInput')?.value);
+        const qris = parseCleanNumber(document.getElementById('qrisInput')?.value);
+        const phys = parseCleanNumber(document.getElementById('physInput')?.value);
+        const park = parseCleanNumber(document.getElementById('parkingInput')?.value);
+        const { expenseTotal } = collectExpenseDataFromContainer('expenseRowsContainer');
+
+        const omsetEl = document.getElementById('previewTotalOmset');
+        const setoranEl = document.getElementById('previewTotalSetoran');
+        const expEl = document.getElementById('previewSummaryExpense');
+        if (omsetEl) omsetEl.innerText = formatRp(debit + qris + phys);
+        if (setoranEl) setoranEl.innerText = formatRp(phys + park);
+        if (expEl) expEl.innerText = formatRp(expenseTotal);
     }
 
     function collectExpenseDataFromContainer(containerId) {
@@ -1167,10 +1355,15 @@
     function saveStoreClosing(e) {
         e.preventDefault();
         if (!currentLoggedInStore) return;
+        if (!isClosingsSynced) {
+            alert('Data server masih dimuat, tunggu sebentar lalu coba simpan kembali.');
+            return;
+        }
 
         const storePoint = currentLoggedInStore;
         const isoDate = document.getElementById('closingDateInput').value;
         const timeStr = document.getElementById('closingTimeInput').value || '21:00';
+        const cashierName = document.getElementById('closingCashierInput').value.trim();
         const indoDate = isoDateToIndo(isoDate);
 
         const debit = parseCleanNumber(document.getElementById('debitInput').value);
@@ -1183,11 +1376,31 @@
             alert('Tanggal tutup buku wajib diisi!');
             return;
         }
+        if (!cashierName) {
+            alert('Nama kasir pelapor wajib diisi!');
+            document.getElementById('closingCashierInput').focus();
+            return;
+        }
         if (computerOmset <= 0 && parking <= 0) {
             alert('Isi minimal salah satu nominal omset atau parkir!');
             return;
         }
 
+        // Cek duplikat tanggal di toko yang sama
+        const existingSameDate = storeClosings.filter(
+            i => normalizeStoreName(i.storePoint) === storePoint && String(i.date).trim() === indoDate
+        );
+        if (existingSameDate.length > 0) {
+            const prev = existingSameDate[existingSameDate.length - 1];
+            const ok = confirm(
+                `Perhatian: ${storePoint} sudah memiliki laporan tutup buku pada tanggal ${indoDate} ` +
+                `(Fisik: ${formatRp(prev.physicalCash || 0)}, QRIS: ${formatRp(prev.qris || 0)}, Debit: ${formatRp(prev.debit || 0)}).\n\n` +
+                `Klik OK jika ingin menambah laporan shift baru, atau Batal untuk mengedit data yang sudah ada di menu Riwayat.`
+            );
+            if (!ok) return;
+        }
+
+        localStorage.setItem(`aww_last_cashier_${storePoint}`, cashierName);
         const { expenseDesc, expenseTotal } = collectExpenseDataFromContainer('expenseRowsContainer');
 
         const newRecord = {
@@ -1195,6 +1408,7 @@
             storePoint,
             date: indoDate,
             time: timeStr,
+            cashierName,
             debit,
             qris,
             physicalCash,
@@ -1208,17 +1422,28 @@
             bulkPickupId: ''
         };
 
-        const updatedClosings = [...storeClosings, newRecord];
-        db.ref('store_closings').set(updatedClosings).then(() => {
+        const saveBtn = document.getElementById('btnSaveClosing');
+        saveBtn.disabled = true;
+        saveBtn.innerText = '⏳ Menyimpan ke Pusat...';
+
+        db.ref('store_closings').transaction(currentRaw => {
+            const list = normalizeFirebaseList(currentRaw);
+            list.push(newRecord);
+            return list;
+        }).then(() => {
             document.getElementById('debitInput').value = '';
             document.getElementById('qrisInput').value = '';
             document.getElementById('physInput').value = '';
             document.getElementById('parkingInput').value = '';
             document.getElementById('expenseRowsContainer').innerHTML = '';
             addExpenseRow('expenseRowsContainer');
-            alert(`Tutup buku ${storePoint} tanggal ${indoDate} berhasil disimpan!`);
+            updateDailyClosingPreview();
+            showWaClosingModal(newRecord);
         }).catch(err => {
             alert('Gagal menyimpan ke server: ' + err.message);
+        }).finally(() => {
+            saveBtn.disabled = false;
+            saveBtn.innerText = '💾 Simpan Tutup Buku Harian';
         });
     }
 
@@ -1308,6 +1533,11 @@
 
     function processBulkPickup() {
         if (!currentLoggedInStore) return;
+        if (!isClosingsSynced || !isPickupsSynced) {
+            alert('Data server masih disinkronkan, tunggu sebentar...');
+            return;
+        }
+
         const storePoint = currentLoggedInStore;
         const collectorName = document.getElementById('bulkCollectorName').value.trim();
         const dtLocal = document.getElementById('bulkPickupDateTime').value;
@@ -1332,94 +1562,164 @@
         localStorage.setItem('aww_last_collector', collectorName);
 
         const selectedIds = checkedBoxes.map(cb => Number(cb.dataset.id));
-        const datesList = [];
-        let totalPermen = 0;
-        let totalParkir = 0;
-
-        checkedBoxes.forEach(cb => {
-            totalPermen += Number(cb.dataset.phys || 0);
-            totalParkir += Number(cb.dataset.park || 0);
-            if (cb.dataset.date) datesList.push(cb.dataset.date);
-        });
-
-        datesList.sort((a, b) => parseIndoDateToMs(a) - parseIndoDateToMs(b));
-        const startDate = datesList[0];
-        const endDate = datesList[datesList.length - 1];
-        const periodText = startDate === endDate ? startDate : `${startDate} s/d ${endDate}`;
-
         const bulkPickupId = Date.now();
+        let finalizedBatch = null;
 
-        const updatedClosings = storeClosings.map(item => {
-            if (selectedIds.includes(Number(item.id))) {
-                return {
-                    ...item,
-                    isCollected: true,
-                    collectorName: collectorName,
-                    collectedAt: pickupTimeStr,
-                    pickupTime: pickupTimeStr,
-                    bulkPickupId: bulkPickupId
-                };
+        const btn = document.getElementById('btnProcessPickup');
+        btn.disabled = true;
+        btn.innerText = '⏳ Memproses Pengambilan...';
+
+        db.ref('store_closings').transaction(currentRaw => {
+            const list = normalizeFirebaseList(currentRaw);
+            const validTargets = list.filter(
+                item => selectedIds.includes(Number(item.id)) && !item.isCollected
+            );
+            if (validTargets.length === 0) {
+                return; // Abort transaction jika sudah diambil perangkat lain
             }
-            return item;
-        });
 
-        const newPickupBatch = {
-            id: bulkPickupId,
-            source: 'store_app_bulk',
-            storePoint: storePoint,
-            collectorName: collectorName,
-            startDate: startDate,
-            endDate: endDate,
-            periodText: periodText,
-            datesList: datesList,
-            datesCount: datesList.length,
-            pickupTime: pickupTimeStr,
-            physAmount: totalPermen,
-            parkAmount: totalParkir,
-            collectedClosingIds: selectedIds
-        };
-        const updatedPickups = [...storeBulkPickups, newPickupBatch];
+            const datesList = [];
+            let totalPermen = 0;
+            let totalParkir = 0;
+            const actualIds = [];
 
-        const newAuditLog = {
-            id: bulkPickupId + 1,
-            time: pickupTimeStr,
-            storePoint: storePoint,
-            actionType: 'PICKUP',
-            cashierName: collectorName,
-            reason: 'Penarikan rutin permen toko',
-            details: `Ambil Masal (${periodText}) | Pengambil: ${collectorName} | Nominal Permen: ${formatRp(totalPermen)} | Parkir: ${formatRp(totalParkir)}`
-        };
-        const updatedAuditLogs = [...storeAuditLogs, newAuditLog];
+            validTargets.forEach(item => {
+                actualIds.push(Number(item.id));
+                totalPermen += Number(item.physicalCash || 0);
+                totalParkir += Number(item.parking || 0);
+                if (item.date) datesList.push(item.date);
+            });
 
-        Promise.all([
-            db.ref('store_closings').set(updatedClosings),
-            db.ref('store_bulk_pickups').set(updatedPickups),
-            db.ref('store_audit_logs').set(updatedAuditLogs)
-        ]).then(() => {
-            showWaReportModal(newPickupBatch);
+            datesList.sort((a, b) => parseIndoDateToMs(a) - parseIndoDateToMs(b));
+            const startDate = datesList[0];
+            const endDate = datesList[datesList.length - 1];
+            const periodText = startDate === endDate ? startDate : `${startDate} s/d ${endDate}`;
+
+            finalizedBatch = {
+                id: bulkPickupId,
+                source: 'store_app_bulk',
+                storePoint: storePoint,
+                collectorName: collectorName,
+                startDate: startDate,
+                endDate: endDate,
+                periodText: periodText,
+                datesList: datesList,
+                datesCount: datesList.length,
+                pickupTime: pickupTimeStr,
+                physAmount: totalPermen,
+                parkAmount: totalParkir,
+                collectedClosingIds: actualIds
+            };
+
+            return list.map(item => {
+                if (actualIds.includes(Number(item.id))) {
+                    return {
+                        ...item,
+                        isCollected: true,
+                        collectorName: collectorName,
+                        collectedAt: pickupTimeStr,
+                        pickupTime: pickupTimeStr,
+                        bulkPickupId: bulkPickupId
+                    };
+                }
+                return item;
+            });
+        }).then(txResult => {
+            if (!txResult.committed || !finalizedBatch) {
+                alert('Data tutup buku yang dipilih sudah ditarik oleh perangkat lain.');
+                return;
+            }
+
+            const newAuditLog = {
+                id: bulkPickupId + 1,
+                time: pickupTimeStr,
+                storePoint: storePoint,
+                actionType: 'PICKUP',
+                cashierName: collectorName,
+                reason: 'Penarikan rutin permen toko',
+                details: `Ambil Masal (${finalizedBatch.periodText}) | Pengambil: ${collectorName} | Nominal Permen: ${formatRp(finalizedBatch.physAmount)} | Parkir: ${formatRp(finalizedBatch.parkAmount)}`
+            };
+
+            return Promise.all([
+                db.ref('store_bulk_pickups').transaction(raw => {
+                    const arr = normalizeFirebaseList(raw);
+                    arr.push(finalizedBatch);
+                    return arr;
+                }),
+                db.ref('store_audit_logs').transaction(raw => {
+                    const arr = normalizeFirebaseList(raw);
+                    arr.push(newAuditLog);
+                    return arr;
+                })
+            ]).then(() => {
+                showWaPickupModal(finalizedBatch);
+            });
         }).catch(err => {
             alert('Gagal menyimpan pengambilan massal: ' + err.message);
+        }).finally(() => {
+            btn.disabled = false;
+            btn.innerText = '✅ Simpan Ambil Masal & Buat Laporan WA';
         });
     }
 
     // ==========================================
     // GENERATOR & MODAL LAPORAN WHATSAPP
     // ==========================================
-    function buildWaPickupMessage(record) {
-        return `*PENGAMBILAN PERMEN*\n\n` +
-               `🏪 *Toko:* ${record.storePoint}\n` +
-               `📦 *Jenis:* Ambil Masal (Penarikan Rutin)\n` +
-               `👤 *Pengambil:* ${record.collectorName}\n` +
-               `💰 *Nominal Permen:* ${formatRp(record.physAmount)}\n` +
-               `📅 *Periode Permen:* ${record.periodText}\n` +
-               `⏰ *Waktu Ambil:* ${record.pickupTime}`;
+    function buildWaClosingMessage(record) {
+        const cashierLine = record.cashierName ? `🧑‍💼 *Kasir:* ${record.cashierName}\n` : '';
+        return `*LAPORAN TUTUP BUKU HARIAN*\n\n` +
+               `🏪 *Toko:* ${normalizeStoreName(record.storePoint)}\n` +
+               `📅 *Tanggal:* ${record.date} (${record.time || '-'})\n` +
+               cashierLine +
+               `💳 *Debit / EDC:* ${formatRp(record.debit || 0)}\n` +
+               `📱 *QRIS:* ${formatRp(record.qris || 0)}\n` +
+               `💵 *Fisik (Permen):* ${formatRp(record.physicalCash || 0)}\n` +
+               `📊 *Total Omset:* ${formatRp(record.computerOmset || 0)}\n` +
+               `💸 *Pengeluaran:* ${record.expenseDesc || '-'}\n` +
+               `🅿️ *Parkir:* ${formatRp(record.parking || 0)}`;
     }
 
-    function showWaReportModal(record) {
-        const waText = buildWaPickupMessage(record);
+    function showWaClosingModal(record) {
+        const waText = buildWaClosingMessage(record);
+        document.getElementById('waModalTitle').innerText = '✅ Tutup Buku Tersimpan!';
+        document.getElementById('waModalDesc').innerText = 'Laporan tutup buku harian sudah masuk ke pusat. Salin atau kirim ke grup WhatsApp jika diperlukan:';
         document.getElementById('waReportTextBox').innerText = waText;
         document.getElementById('waDirectShareLink').href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
         document.getElementById('waReportModal').style.display = 'flex';
+    }
+
+    function showWaClosingModalById(id) {
+        const item = storeClosings.find(i => Number(i.id) === Number(id));
+        if (!item) return;
+        showWaClosingModal(item);
+        document.getElementById('waModalTitle').innerText = `📋 Laporan Tutup Buku (${item.date})`;
+    }
+
+    function buildWaPickupMessage(record) {
+        const periodStr = record.periodText || (record.startDate && record.endDate ? `${record.startDate} s/d ${record.endDate}` : '-');
+        return `*PENGAMBILAN PERMEN*\n\n` +
+               `🏪 *Toko:* ${normalizeStoreName(record.storePoint)}\n` +
+               `📦 *Jenis:* Ambil Masal (Penarikan Rutin)\n` +
+               `👤 *Pengambil:* ${record.collectorName || '-'}\n` +
+               `💰 *Nominal Permen:* ${formatRp(record.physAmount || 0)}\n` +
+               `📅 *Periode Permen:* ${periodStr}\n` +
+               `⏰ *Waktu Ambil:* ${record.pickupTime || '-'}`;
+    }
+
+    function showWaPickupModal(record) {
+        const waText = buildWaPickupMessage(record);
+        document.getElementById('waModalTitle').innerText = '✅ Pengambilan Tersimpan!';
+        document.getElementById('waModalDesc').innerText = 'Data sudah masuk ke aplikasi pusat. Silakan salin atau kirim laporan di bawah ini ke grup WhatsApp:';
+        document.getElementById('waReportTextBox').innerText = waText;
+        document.getElementById('waDirectShareLink').href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+        document.getElementById('waReportModal').style.display = 'flex';
+    }
+
+    function showWaPickupModalById(id) {
+        const rec = storeBulkPickups.find(p => Number(p.id) === Number(id));
+        if (!rec) return;
+        showWaPickupModal(rec);
+        document.getElementById('waModalTitle').innerText = '📋 Laporan Pengambilan Permen';
     }
 
     function copyWaReportText() {
@@ -1440,8 +1740,7 @@
     }
 
     // ==========================================
-    // RENDER TAB RIWAYAT TOKO
-    // URUTAN KOLOM: Aksi > Tanggal & Waktu > Fisik > Parkir > QRIS > Debit > Pengeluaran > Status Ambil
+    // RENDER TAB RIWAYAT TOKO & BATAL AMBIL MASAL
     // ==========================================
     function renderStorePickupHistory() {
         if (!currentLoggedInStore) return;
@@ -1469,17 +1768,107 @@
                     <td><b>${escapeHtml(rec.collectorName || '-')}</b></td>
                     <td class="nominal-center" style="font-weight: 800; color: #047857;">${formatRp(rec.physAmount || 0)}</td>
                     <td style="text-align: center;">
-                        <button type="button" class="btn btn-outline btn-sm" onclick='showWaReportModal(${JSON.stringify({
-                            storePoint: normalizeStoreName(rec.storePoint),
-                            collectorName: rec.collectorName || '-',
-                            physAmount: Number(rec.physAmount || 0),
-                            periodText: periodStr,
-                            pickupTime: rec.pickupTime || '-'
-                        })})'>📋 Teks WA</button>
+                        <div class="action-btn-group">
+                            <button type="button" class="btn btn-outline btn-sm" onclick="showWaPickupModalById(${rec.id})">📋 Teks WA</button>
+                            <button type="button" class="btn btn-outline btn-sm" style="color: var(--danger); border-color: #fecaca;" onclick="requestCancelBulkPickup(${rec.id})">🗑️ Batal</button>
+                        </div>
                     </td>
                 </tr>
             `;
         });
+    }
+
+    function requestCancelBulkPickup(pickupId) {
+        const rec = storeBulkPickups.find(p => Number(p.id) === Number(pickupId));
+        if (!rec) return;
+
+        requestMasterPin(
+            'Batalkan Pengambilan Masal',
+            'Masukkan Master PIN pusat untuk membatalkan sesi pengambilan ini:',
+            () => {
+                const periodStr = rec.periodText || (rec.startDate && rec.endDate ? `${rec.startDate} s/d ${rec.endDate}` : '-');
+                document.getElementById('cancelPickupId').value = rec.id;
+                document.getElementById('cancelPickupActorInput').value = '';
+                document.getElementById('cancelPickupReasonInput').value = '';
+                document.getElementById('cancelPickupSummaryBox').innerHTML = `
+                    <b>Toko:</b> ${escapeHtml(normalizeStoreName(rec.storePoint))}<br>
+                    <b>Waktu Ambil:</b> ${escapeHtml(rec.pickupTime || '-')}<br>
+                    <b>Periode Permen:</b> ${escapeHtml(periodStr)}<br>
+                    <b>Pengambil:</b> ${escapeHtml(rec.collectorName || '-')}<br>
+                    <b>Nominal Permen:</b> ${formatRp(rec.physAmount || 0)}
+                `;
+                document.getElementById('cancelPickupModal').style.display = 'flex';
+            }
+        );
+    }
+
+    function submitCancelBulkPickup(e) {
+        e.preventDefault();
+        const pickupId = Number(document.getElementById('cancelPickupId').value);
+        const targetBatch = storeBulkPickups.find(p => Number(p.id) === pickupId);
+        if (!targetBatch) return;
+
+        const actorName = document.getElementById('cancelPickupActorInput').value.trim();
+        const reason = document.getElementById('cancelPickupReasonInput').value.trim();
+        if (!actorName || !reason) {
+            alert('Nama pelaku dan alasan pembatalan wajib diisi!');
+            return;
+        }
+
+        const linkedIds = Array.isArray(targetBatch.collectedClosingIds)
+            ? targetBatch.collectedClosingIds.map(Number)
+            : [];
+        const periodStr = targetBatch.periodText || `${targetBatch.startDate || '-'} s/d ${targetBatch.endDate || '-'}`;
+        const nowTs = getCurrentIndoTimestamp();
+
+        const auditEntry = {
+            id: Date.now(),
+            time: nowTs,
+            storePoint: normalizeStoreName(targetBatch.storePoint),
+            actionType: 'DELETE_PICKUP',
+            cashierName: actorName,
+            reason: reason,
+            details: `Batal Ambil Masal (${periodStr}) | Pengambil Awal: ${targetBatch.collectorName || '-'} | Nominal: ${formatRp(targetBatch.physAmount || 0)}`
+        };
+
+        Promise.all([
+            db.ref('store_closings').transaction(raw => {
+                const list = normalizeFirebaseList(raw);
+                return list.map(item => {
+                    if (Number(item.bulkPickupId) === pickupId || linkedIds.includes(Number(item.id))) {
+                        return {
+                            ...item,
+                            isCollected: false,
+                            collectorName: '',
+                            collectedAt: '',
+                            pickupTime: '',
+                            bulkPickupId: ''
+                        };
+                    }
+                    return item;
+                });
+            }),
+            db.ref('store_bulk_pickups').transaction(raw => {
+                const list = normalizeFirebaseList(raw);
+                return list.filter(p => Number(p.id) !== pickupId);
+            }),
+            db.ref('store_audit_logs').transaction(raw => {
+                const list = normalizeFirebaseList(raw);
+                list.push(auditEntry);
+                return list;
+            })
+        ]).then(() => {
+            document.getElementById('cancelPickupModal').style.display = 'none';
+            alert('Pengambilan masal dibatalkan. Data tutup buku kembali berstatus Belum Diambil dan tercatat di Audit Trail!');
+        }).catch(err => {
+            alert('Gagal membatalkan pengambilan: ' + err.message);
+        });
+    }
+
+    function resetHistoryFilters() {
+        document.getElementById('historyMonthFilter').value = '';
+        document.getElementById('historyStatusFilter').value = 'ALL';
+        renderStoreClosingsHistory();
     }
 
     function formatExpenseColumnHtml(expenseDesc) {
@@ -1495,13 +1884,40 @@
         const tbody = document.getElementById('storeClosingsHistoryBody');
         if (!tbody) return;
 
+        const monthFilter = document.getElementById('historyMonthFilter')?.value || '';
+        const statusFilter = document.getElementById('historyStatusFilter')?.value || 'ALL';
+
         const filtered = storeClosings
-            .filter(i => normalizeStoreName(i.storePoint) === activeStore)
+            .filter(i => {
+                if (normalizeStoreName(i.storePoint) !== activeStore) return false;
+                if (statusFilter === 'UNCOLLECTED' && i.isCollected) return false;
+                if (statusFilter === 'COLLECTED' && !i.isCollected) return false;
+                if (monthFilter) {
+                    const iso = indoDateToIso(i.date);
+                    if (!iso.startsWith(monthFilter)) return false;
+                }
+                return true;
+            })
             .slice()
             .sort((a, b) => parseIndoDateToMs(b.date) - parseIndoDateToMs(a.date));
 
+        let sumPhys = 0, sumPark = 0, sumQris = 0, sumDebit = 0, sumExp = 0;
+        filtered.forEach(item => {
+            sumPhys += Number(item.physicalCash || 0);
+            sumPark += Number(item.parking || 0);
+            sumQris += Number(item.qris || 0);
+            sumDebit += Number(item.debit || 0);
+            sumExp += Number(item.expenseTotal || 0);
+        });
+
+        document.getElementById('subHistoryPhys').innerText = formatRp(sumPhys);
+        document.getElementById('subHistoryPark').innerText = formatRp(sumPark);
+        document.getElementById('subHistoryQris').innerText = formatRp(sumQris);
+        document.getElementById('subHistoryDebit').innerText = formatRp(sumDebit);
+        document.getElementById('subHistoryExpense').innerText = formatRp(sumExp);
+
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 18px;">Belum ada riwayat tutup buku untuk ${escapeHtml(activeStore)}.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 18px;">Tidak ada riwayat tutup buku untuk ${escapeHtml(activeStore)} pada filter ini.</td></tr>`;
             return;
         }
 
@@ -1511,15 +1927,24 @@
                 ? `<span class="badge badge-success">✔ Diambil (${escapeHtml(item.collectorName || 'Pusat')})</span>${item.collectedAt ? `<br><small style="color:var(--text-muted);">${escapeHtml(item.collectedAt)}</small>` : ''}`
                 : `<span class="badge badge-danger">⏳ Belum Diambil</span>`;
 
+            const editedTag = item.lastEditedBy
+                ? `<br><small style="color:#b45309; font-weight:600;">✏️ Diedit: ${escapeHtml(item.lastEditedBy)}</small>`
+                : '';
+
             tbody.innerHTML += `
                 <tr>
                     <td style="text-align: center;">
                         <div class="action-btn-group">
+                            <button type="button" class="btn btn-outline btn-sm" title="Salin Laporan WA" onclick="showWaClosingModalById(${item.id})">📋 WA</button>
                             <button type="button" class="btn btn-outline btn-sm" style="color: var(--primary); border-color: #c7d2fe;" onclick="openEditClosingModal(${item.id})">✏️ Edit</button>
                             <button type="button" class="btn btn-outline btn-sm" style="color: var(--danger); border-color: #fecaca;" onclick="openDeleteClosingModal(${item.id})">🗑️ Hapus</button>
                         </div>
                     </td>
-                    <td style="white-space: nowrap;"><b>${escapeHtml(item.date)}</b><br><small style="color: var(--text-muted);">${escapeHtml(item.time || '')}</small></td>
+                    <td style="white-space: nowrap;">
+                        <b>${escapeHtml(item.date)}</b><br>
+                        <small style="color: var(--text-muted);">${escapeHtml(item.time || '')}${item.cashierName ? ' • ' + escapeHtml(item.cashierName) : ''}</small>
+                        ${editedTag}
+                    </td>
                     <td class="nominal-center" style="font-weight: 700; color: #047857; white-space: nowrap;">${formatRp(item.physicalCash || 0)}</td>
                     <td class="nominal-center" style="color: var(--success); font-weight: 600; white-space: nowrap;">${formatRp(item.parking || 0)}</td>
                     <td class="nominal-center" style="white-space: nowrap;">${formatRp(item.qris || 0)}</td>
@@ -1552,7 +1977,6 @@
         document.getElementById('editQrisInput').value = Number(item.qris || 0) > 0 ? formatNumber(item.qris) : '';
         document.getElementById('editDebitInput').value = Number(item.debit || 0) > 0 ? formatNumber(item.debit) : '';
 
-        // Populate expense rows
         const editExpContainer = document.getElementById('editExpenseRowsContainer');
         editExpContainer.innerHTML = '';
         const rawExp = String(item.expenseDesc || '').trim();
@@ -1610,7 +2034,6 @@
         const collectorName = isCollected ? (document.getElementById('editCollectorNameInput').value.trim() || oldItem.collectorName || 'Pusat') : '';
         const collectedAt = isCollected ? (oldItem.collectedAt || getCurrentIndoTimestamp()) : '';
 
-        // Catat detail perbandingan sebelum vs sesudah untuk Audit Trail
         const diffs = [];
         if (oldItem.date !== indoDate) diffs.push(`Tanggal: ${oldItem.date} → ${indoDate}`);
         if ((oldItem.time || '') !== timeStr) diffs.push(`Jam: ${oldItem.time || '-'} → ${timeStr}`);
@@ -1630,6 +2053,7 @@
             return;
         }
 
+        const nowTs = getCurrentIndoTimestamp();
         const updatedItem = {
             ...oldItem,
             date: indoDate,
@@ -1646,12 +2070,9 @@
             collectedAt,
             lastEditedBy: cashierName,
             lastEditedReason: reason,
-            lastEditedAt: getCurrentIndoTimestamp()
+            lastEditedAt: nowTs
         };
 
-        const updatedClosings = storeClosings.map(i => Number(i.id) === id ? updatedItem : i);
-
-        const nowTs = getCurrentIndoTimestamp();
         const auditEntry = {
             id: Date.now(),
             time: nowTs,
@@ -1661,11 +2082,17 @@
             reason: reason,
             details: `Edit Tutup Buku Tgl ${indoDate} | Perubahan: ${diffs.join('; ')}`
         };
-        const updatedAuditLogs = [...storeAuditLogs, auditEntry];
 
         Promise.all([
-            db.ref('store_closings').set(updatedClosings),
-            db.ref('store_audit_logs').set(updatedAuditLogs)
+            db.ref('store_closings').transaction(raw => {
+                const list = normalizeFirebaseList(raw);
+                return list.map(i => Number(i.id) === id ? updatedItem : i);
+            }),
+            db.ref('store_audit_logs').transaction(raw => {
+                const list = normalizeFirebaseList(raw);
+                list.push(auditEntry);
+                return list;
+            })
         ]).then(() => {
             document.getElementById('editClosingModal').style.display = 'none';
             alert('Perubahan tutup buku berhasil disimpan dan tercatat di Audit Trail!');
@@ -1710,9 +2137,7 @@
             return;
         }
 
-        const updatedClosings = storeClosings.filter(i => Number(i.id) !== id);
         const nowTs = getCurrentIndoTimestamp();
-
         const auditEntry = {
             id: Date.now(),
             time: nowTs,
@@ -1722,11 +2147,17 @@
             reason: reason,
             details: `Hapus Tutup Buku Tgl ${targetItem.date} (${targetItem.time || '-'}) | Data Dihapus: Fisik ${formatRp(targetItem.physicalCash || 0)}, Parkir ${formatRp(targetItem.parking || 0)}, QRIS ${formatRp(targetItem.qris || 0)}, Debit ${formatRp(targetItem.debit || 0)}, Pengeluaran: ${targetItem.expenseDesc || '-'}`
         };
-        const updatedAuditLogs = [...storeAuditLogs, auditEntry];
 
         Promise.all([
-            db.ref('store_closings').set(updatedClosings),
-            db.ref('store_audit_logs').set(updatedAuditLogs)
+            db.ref('store_closings').transaction(raw => {
+                const list = normalizeFirebaseList(raw);
+                return list.filter(i => Number(i.id) !== id);
+            }),
+            db.ref('store_audit_logs').transaction(raw => {
+                const list = normalizeFirebaseList(raw);
+                list.push(auditEntry);
+                return list;
+            })
         ]).then(() => {
             document.getElementById('deleteClosingModal').style.display = 'none';
             alert('Data tutup buku dihapus dan aktivitas telah dicatat di Audit Trail!');
@@ -1758,6 +2189,7 @@
     function detectAuditActionType(log) {
         if (log.actionType) return String(log.actionType).toUpperCase();
         const det = String(log.details || '').toLowerCase();
+        if (det.startsWith('batal ambil')) return 'DELETE_PICKUP';
         if (det.startsWith('edit')) return 'EDIT';
         if (det.startsWith('hapus')) return 'DELETE';
         if (det.startsWith('ambil')) return 'PICKUP';
@@ -1794,6 +2226,7 @@
             if (tp === 'EDIT') badgeHtml = `<span class="badge badge-warning">✏️ EDIT DATA</span>`;
             else if (tp === 'DELETE') badgeHtml = `<span class="badge badge-danger">🗑️ HAPUS DATA</span>`;
             else if (tp === 'PICKUP') badgeHtml = `<span class="badge badge-success">📦 AMBIL MASAL</span>`;
+            else if (tp === 'DELETE_PICKUP') badgeHtml = `<span class="badge badge-danger">🔙 BATAL AMBIL</span>`;
 
             tbody.innerHTML += `
                 <tr>
